@@ -1,4 +1,91 @@
-#include "ofApp.h"
+#include "ofApp.h"	
+
+//--------------------------------------------------------------
+Actor::Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
+
+	this->select_index = ofRandom(location_list.size());
+	while (true) {
+
+		auto itr = find(destination_list.begin(), destination_list.end(), this->select_index);
+		if (itr == destination_list.end()) {
+
+			destination_list.push_back(this->select_index);
+			break;
+		}
+
+		this->select_index = (this->select_index + 1) % location_list.size();
+	}
+
+	this->next_index = this->select_index;
+}
+
+//--------------------------------------------------------------
+void Actor::update(const int& frame_span, vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
+
+	if (ofGetFrameNum() % frame_span == 0) {
+
+		auto tmp_index = this->select_index;
+		this->select_index = this->next_index;
+		int retry = next_index_list[this->select_index].size();
+		this->next_index = next_index_list[this->select_index][(int)ofRandom(next_index_list[this->select_index].size())];
+		while (--retry > 0) {
+
+			auto destination_itr = find(destination_list.begin(), destination_list.end(), this->next_index);
+			if (destination_itr == destination_list.end()) {
+
+				if (tmp_index != this->next_index) {
+
+					destination_list.push_back(this->next_index);
+					break;
+				}
+			}
+
+			this->next_index = next_index_list[this->select_index][(this->next_index + 1) % next_index_list[this->select_index].size()];
+		}
+		if (retry <= 0) {
+
+			destination_list.push_back(this->select_index);
+			this->next_index = this->select_index;
+		}
+	}
+
+	auto param = ofGetFrameNum() % frame_span;
+	auto distance = location_list[this->next_index] - location_list[this->select_index];
+	this->location = location_list[this->select_index] + distance / frame_span * param;
+
+	this->log.push_back(this->location);
+	while (this->log.size() > 100) { this->log.erase(this->log.begin()); }
+}
+
+//--------------------------------------------------------------
+glm::vec3 Actor::getLocation() {
+
+	return this->location;
+}
+
+//--------------------------------------------------------------
+glm::vec3 Actor::getLocation(int i) {
+
+	return i > 0 && i < this->log.size() ? this->log[i] : glm::vec3();
+}
+
+//--------------------------------------------------------------
+vector<glm::vec3> Actor::getLog() {
+
+	return this->log;
+}
+
+//--------------------------------------------------------------
+void Actor::setColor(ofColor value) {
+
+	this->color = value;
+}
+
+//--------------------------------------------------------------
+ofColor Actor::getColor() {
+
+	return this->color;
+}
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,113 +93,135 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
+	ofBackground(239);
+	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
+	ofSetLineWidth(2);
+	ofNoFill();
 
-	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	ofColor color = ofColor(0);
+	vector<ofColor> base_color_list;
+	base_color_list.push_back(color);
+
+	int span = 240;
+	for (int x = -span * 1; x <= span * 1; x += span) {
+
+		for (int y = -span * 1; y <= span * 1; y += span) {
+
+			this->parent_location_group.push_back(glm::vec3(x, y, 0));
+		}
+	}
+
+	for (auto& location : this->parent_location_group) {
+
+		vector<int> next_index = vector<int>();
+		int index = -1;
+		for (auto& other : this->parent_location_group) {
+
+			index++;
+			if (location == other) { continue; }
+
+			float distance = glm::distance(location, other);
+			if (distance <= span) {
+
+				next_index.push_back(index);
+			}
+		}
+		this->parent_next_index_group.push_back(next_index);
+	}
+
+	for (int i = 0; i < 9; i++) {
+
+		this->parent_actor_group.push_back(make_unique<Actor>(this->parent_location_group, this->parent_next_index_group, this->parent_destination_group));
+		this->parent_actor_group.back()->setColor(base_color_list[i % base_color_list.size()]);
+	}
+
+	span = 15;
+	for (int g = 0; g < this->parent_actor_group.size(); g++) {
+
+		vector<glm::vec3> location_group;
+		for (int x = -span * 6; x <= span * 6; x += span) {
+
+			for (int y = -span * 6; y <= span * 6; y += span) {
+
+				location_group.push_back(glm::vec3(x, y, 0));
+			}
+		}
+
+		location_group_list.push_back(location_group);
+
+		vector<vector<int>> next_index_group;
+		for (auto& location : location_group) {
+
+			vector<int> next_index = vector<int>();
+			int index = -1;
+			for (auto& other : location_group) {
+
+				index++;
+				if (location == other) { continue; }
+
+				float distance = glm::distance(location, other);
+				if (distance <= span) {
+
+					next_index.push_back(index);
+				}
+			}
+
+			next_index_group.push_back(next_index);
+		}
+		this->next_index_group_list.push_back(next_index_group);
+
+
+		vector<std::unique_ptr<Actor>> actor_group;
+		vector<int> destination_group;
+		ofColor color;
+		for (int i = 0; i < 5; i++) {
+
+			auto a = make_unique<Actor>(location_group, next_index_group, destination_group);
+			actor_group.push_back(move(a));
+			actor_group.back()->setColor(this->parent_actor_group[g]->getColor());
+		}
+
+		this->actor_group_list.push_back(move(actor_group));
+		this->destination_group_list.push_back(destination_group);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	this->noise_param += 0.05;
+	int frame_span = 4;
+	int prev_index_size = 0;
 
-	this->face.clear();
-	this->line.clear();
+	if (ofGetFrameNum() % frame_span == 0) {
 
-	float threshold_1 = 0.45;
-	float threshold_2 = 0.55;
-	float deg_span = 0.2;
-	int z_span = 1;
-	float noise_span = 0.02;
-	float noise_span_z_scale = 0.5;
-	float radius = 250;
+		prev_index_size = this->parent_destination_group.size();
+	}
 
-	for (float deg = 0; deg < 360; deg += deg_span) {
+	for (auto& actor : this->parent_actor_group) {
 
-		for (int z = -500; z <= 500; z += z_span) {
+		actor->update(frame_span, this->parent_location_group, this->parent_next_index_group, this->parent_destination_group);
+	}
 
-			auto noise_value = ofNoise(glm::vec4(radius * 100, radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale + noise_param));
-			noise_value = abs(z) % 250 > 150 ? 0.5 : noise_value;
-			if (noise_value <= threshold_1 || noise_value >= threshold_2) { continue; }
+	if (prev_index_size != 0) {
 
-			auto noise_1 = ofNoise(glm::vec4(radius * 100, radius * cos((deg - deg_span) * DEG_TO_RAD) * noise_span, radius * sin((deg - deg_span) * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale + noise_param));
-			auto noise_2 = ofNoise(glm::vec4(radius * 100, radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, (z + z_span) * noise_span * noise_span_z_scale + noise_param));
-			auto noise_3 = ofNoise(glm::vec4(radius * 100, radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, (z - z_span) * noise_span * noise_span_z_scale + noise_param));
-			auto noise_4 = ofNoise(glm::vec4(radius * 100, radius * cos((deg + deg_span) * DEG_TO_RAD) * noise_span, radius * sin((deg + deg_span) * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale + noise_param));
+		this->parent_destination_group.erase(this->parent_destination_group.begin(), this->parent_destination_group.begin() + prev_index_size);
+	}
 
-			noise_1 = abs(z) % 250 > 150 ? 0.5 : noise_1;
-			noise_2 = abs(z + z_span) % 250 > 150 ? 0.5 : noise_2;
-			noise_3 = abs(z - z_span) % 250 > 150 ? 0.5 : noise_3;
-			noise_4 = abs(z) % 250 > 150 ? 0.5 : noise_4;
+	for (int g = 0; g < this->parent_actor_group.size(); g++) {
 
-			auto index = this->face.getNumVertices();
-			vector<glm::vec3> vertices;
+		if (ofGetFrameNum() % frame_span == 0) {
 
-			vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
-			vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
-			vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
-			vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
+			prev_index_size = this->destination_group_list[g].size();
+		}
 
-			this->face.addVertices(vertices);
+		for (auto& actor : this->actor_group_list[g]) {
 
-			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
+			actor->update(frame_span, this->location_group_list[g], this->next_index_group_list[g], this->destination_group_list[g]);
+		}
 
-			ofColor face_color(0);
-			for (int i = 0; i < 4; i++) {
+		if (prev_index_size != 0) {
 
-				this->face.addColor(face_color);
-			}
-
-			ofColor line_color(255);
-			if (noise_1 <= threshold_1 || noise_1 >= threshold_2 || abs(z) == 500) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[2]);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-			}
-
-			if (noise_2 <= threshold_1 || noise_2 >= threshold_2 || abs(z) == 500) {
-
-				this->line.addVertex(vertices[2]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-			}
-
-			if (noise_3 <= threshold_1 || noise_3 >= threshold_2 || abs(z) == 500) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[1]);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-			}
-
-			if (noise_4 <= threshold_1 || noise_4 >= threshold_2 || abs(z) == 500) {
-
-				this->line.addVertex(vertices[1]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-			}
+			this->destination_group_list[g].erase(this->destination_group_list[g].begin(), this->destination_group_list[g].begin() + prev_index_size);
 		}
 	}
 }
@@ -121,17 +230,30 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	this->cam.setPosition(0, 0, 1200);
-	ofRotateX(90);
 
-	this->line.draw();
-	this->face.draw();
+	for (int g = 0; g < this->parent_actor_group.size(); g++) {
+
+		ofSetColor(39);
+		ofDrawRectangle(this->parent_actor_group[g]->getLocation(), 200, 200);
+
+		for (auto& actor : this->actor_group_list[g]) {
+
+			for (int i = 0; i < actor->getLog().size() - 1; i++) {
+
+				auto loc_1 = actor->getLog()[i] + this->parent_actor_group[g]->getLog()[i];
+				auto loc_2 = actor->getLog()[i + 1] + this->parent_actor_group[g]->getLog()[i + 1];
+
+				ofSetColor(ofColor(actor->getColor(), ofMap(i, 0, actor->getLog().size(), 39, 239)));
+				ofDrawLine(loc_1, loc_2);
+			}
+		}
+	}
 
 	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 1;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -146,6 +268,7 @@ void ofApp::draw() {
 	}
 	*/
 }
+
 
 //--------------------------------------------------------------
 int main() {
