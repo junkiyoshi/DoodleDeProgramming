@@ -54,7 +54,7 @@ void Actor::update(const int& frame_span, vector<glm::vec3>& location_list, vect
 	this->location = location_list[this->select_index] + distance / frame_span * param;
 
 	this->log.push_back(this->location);
-	while (this->log.size() > 100) { this->log.erase(this->log.begin()); }
+	while (this->log.size() > 50) { this->log.erase(this->log.begin()); }
 }
 
 //--------------------------------------------------------------
@@ -93,19 +93,23 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
-	ofSetLineWidth(2);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 	ofNoFill();
-
-	ofColor color = ofColor(0);
+	
 	vector<ofColor> base_color_list;
-	base_color_list.push_back(color);
+	ofColor color;
+	for (int i = 0; i < 6; i++) {
 
-	int span = 240;
-	for (int x = -span * 1; x <= span * 1; x += span) {
+		color.setHsb(ofMap(i, 0, 6, 0, 255), 255, 255);
+		base_color_list.push_back(color);
+	}
 
-		for (int y = -span * 1; y <= span * 1; y += span) {
+	int span = 180;
+	for (int x = -span * 1; x <= span * 1; x += span * 2) {
+
+		for (int y = -span * 1; y <= span * 1; y += span * 2) {
 
 			this->parent_location_group.push_back(glm::vec3(x, y, 0));
 		}
@@ -121,7 +125,7 @@ void ofApp::setup() {
 			if (location == other) { continue; }
 
 			float distance = glm::distance(location, other);
-			if (distance <= span) {
+			if (distance <= span * 2) {
 
 				next_index.push_back(index);
 			}
@@ -129,13 +133,13 @@ void ofApp::setup() {
 		this->parent_next_index_group.push_back(next_index);
 	}
 
-	for (int i = 0; i < 9; i++) {
+	for (int i = 0; i < this->parent_location_group.size(); i++) {
 
 		this->parent_actor_group.push_back(make_unique<Actor>(this->parent_location_group, this->parent_next_index_group, this->parent_destination_group));
 		this->parent_actor_group.back()->setColor(base_color_list[i % base_color_list.size()]);
 	}
 
-	span = 15;
+	span = 20;
 	for (int g = 0; g < this->parent_actor_group.size(); g++) {
 
 		vector<glm::vec3> location_group;
@@ -174,11 +178,11 @@ void ofApp::setup() {
 		vector<std::unique_ptr<Actor>> actor_group;
 		vector<int> destination_group;
 		ofColor color;
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 6; i++) {
 
 			auto a = make_unique<Actor>(location_group, next_index_group, destination_group);
 			actor_group.push_back(move(a));
-			actor_group.back()->setColor(this->parent_actor_group[g]->getColor());
+			actor_group.back()->setColor(base_color_list[i % base_color_list.size()]);
 		}
 
 		this->actor_group_list.push_back(move(actor_group));
@@ -189,7 +193,7 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	int frame_span = 4;
+	int frame_span = 2;
 	int prev_index_size = 0;
 
 	if (ofGetFrameNum() % frame_span == 0) {
@@ -233,8 +237,9 @@ void ofApp::draw() {
 
 	for (int g = 0; g < this->parent_actor_group.size(); g++) {
 
-		ofSetColor(39);
-		ofDrawRectangle(this->parent_actor_group[g]->getLocation(), 200, 200);
+		ofSetLineWidth(0.5);
+		ofSetColor(255);
+		ofDrawRectangle(this->parent_actor_group[g]->getLocation(), 300, 300);
 
 		for (auto& actor : this->actor_group_list[g]) {
 
@@ -243,7 +248,8 @@ void ofApp::draw() {
 				auto loc_1 = actor->getLog()[i] + this->parent_actor_group[g]->getLog()[i];
 				auto loc_2 = actor->getLog()[i + 1] + this->parent_actor_group[g]->getLog()[i + 1];
 
-				ofSetColor(ofColor(actor->getColor(), ofMap(i, 0, actor->getLog().size(), 39, 239)));
+				ofSetColor(ofColor(actor->getColor(), ofMap(i, 0, actor->getLog().size(), 0, 255)));
+				ofSetLineWidth(ofMap(i, 0, actor->getLog().size(), 0, 2));
 				ofDrawLine(loc_1, loc_2);
 			}
 		}
