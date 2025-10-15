@@ -1,91 +1,4 @@
-#include "ofApp.h"	
-
-//--------------------------------------------------------------
-Actor::Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
-
-	this->select_index = ofRandom(location_list.size());
-	while (true) {
-
-		auto itr = find(destination_list.begin(), destination_list.end(), this->select_index);
-		if (itr == destination_list.end()) {
-
-			destination_list.push_back(this->select_index);
-			break;
-		}
-
-		this->select_index = (this->select_index + 1) % location_list.size();
-	}
-
-	this->next_index = this->select_index;
-}
-
-//--------------------------------------------------------------
-void Actor::update(const int& frame_span, vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
-
-	if (ofGetFrameNum() % frame_span == 0) {
-
-		auto tmp_index = this->select_index;
-		this->select_index = this->next_index;
-		int retry = next_index_list[this->select_index].size();
-		this->next_index = next_index_list[this->select_index][(int)ofRandom(next_index_list[this->select_index].size())];
-		while (--retry > 0) {
-
-			auto destination_itr = find(destination_list.begin(), destination_list.end(), this->next_index);
-			if (destination_itr == destination_list.end()) {
-
-				if (tmp_index != this->next_index) {
-
-					destination_list.push_back(this->next_index);
-					break;
-				}
-			}
-
-			this->next_index = next_index_list[this->select_index][(this->next_index + 1) % next_index_list[this->select_index].size()];
-		}
-		if (retry <= 0) {
-
-			destination_list.push_back(this->select_index);
-			this->next_index = this->select_index;
-		}
-	}
-
-	auto param = ofGetFrameNum() % frame_span;
-	auto distance = location_list[this->next_index] - location_list[this->select_index];
-	this->location = location_list[this->select_index] + distance / frame_span * param;
-
-	this->log.push_back(this->location);
-	while (this->log.size() > 50) { this->log.erase(this->log.begin()); }
-}
-
-//--------------------------------------------------------------
-glm::vec3 Actor::getLocation() {
-
-	return this->location;
-}
-
-//--------------------------------------------------------------
-glm::vec3 Actor::getLocation(int i) {
-
-	return i > 0 && i < this->log.size() ? this->log[i] : glm::vec3();
-}
-
-//--------------------------------------------------------------
-vector<glm::vec3> Actor::getLog() {
-
-	return this->log;
-}
-
-//--------------------------------------------------------------
-void Actor::setColor(ofColor value) {
-
-	this->color = value;
-}
-
-//--------------------------------------------------------------
-ofColor Actor::getColor() {
-
-	return this->color;
-}
+#include "ofApp.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -93,139 +6,29 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
-	ofNoFill();
-	
-	vector<ofColor> base_color_list;
-	ofColor color;
-	for (int i = 0; i < 6; i++) {
+	ofBackground(239);
+	ofSetLineWidth(1.5);
+	ofEnableDepthTest();
 
-		color.setHsb(ofMap(i, 0, 6, 0, 255), 255, 255);
-		base_color_list.push_back(color);
-	}
-
-	int span = 180;
-	for (int x = -span * 1; x <= span * 1; x += span * 2) {
-
-		for (int y = -span * 1; y <= span * 1; y += span * 2) {
-
-			this->parent_location_group.push_back(glm::vec3(x, y, 0));
-		}
-	}
-
-	for (auto& location : this->parent_location_group) {
-
-		vector<int> next_index = vector<int>();
-		int index = -1;
-		for (auto& other : this->parent_location_group) {
-
-			index++;
-			if (location == other) { continue; }
-
-			float distance = glm::distance(location, other);
-			if (distance <= span * 2) {
-
-				next_index.push_back(index);
-			}
-		}
-		this->parent_next_index_group.push_back(next_index);
-	}
-
-	for (int i = 0; i < this->parent_location_group.size(); i++) {
-
-		this->parent_actor_group.push_back(make_unique<Actor>(this->parent_location_group, this->parent_next_index_group, this->parent_destination_group));
-		this->parent_actor_group.back()->setColor(base_color_list[i % base_color_list.size()]);
-	}
-
-	span = 20;
-	for (int g = 0; g < this->parent_actor_group.size(); g++) {
-
-		vector<glm::vec3> location_group;
-		for (int x = -span * 6; x <= span * 6; x += span) {
-
-			for (int y = -span * 6; y <= span * 6; y += span) {
-
-				location_group.push_back(glm::vec3(x, y, 0));
-			}
-		}
-
-		location_group_list.push_back(location_group);
-
-		vector<vector<int>> next_index_group;
-		for (auto& location : location_group) {
-
-			vector<int> next_index = vector<int>();
-			int index = -1;
-			for (auto& other : location_group) {
-
-				index++;
-				if (location == other) { continue; }
-
-				float distance = glm::distance(location, other);
-				if (distance <= span) {
-
-					next_index.push_back(index);
-				}
-			}
-
-			next_index_group.push_back(next_index);
-		}
-		this->next_index_group_list.push_back(next_index_group);
-
-
-		vector<std::unique_ptr<Actor>> actor_group;
-		vector<int> destination_group;
-		ofColor color;
-		for (int i = 0; i < 6; i++) {
-
-			auto a = make_unique<Actor>(location_group, next_index_group, destination_group);
-			actor_group.push_back(move(a));
-			actor_group.back()->setColor(base_color_list[i % base_color_list.size()]);
-		}
-
-		this->actor_group_list.push_back(move(actor_group));
-		this->destination_group_list.push_back(destination_group);
-	}
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	int frame_span = 2;
-	int prev_index_size = 0;
+	ofSeedRandom(39);
 
-	if (ofGetFrameNum() % frame_span == 0) {
+	this->face.clear();
+	this->frame.clear();
 
-		prev_index_size = this->parent_destination_group.size();
-	}
+	for (int z = -600; z <= 600; z += 20) {
 
-	for (auto& actor : this->parent_actor_group) {
+		for (int radius = 150; radius <= 300; radius += 150) {
 
-		actor->update(frame_span, this->parent_location_group, this->parent_next_index_group, this->parent_destination_group);
-	}
+			int deg_start = radius == 150 ? ofGetFrameNum() * 2.88 + z + 600 : ofGetFrameNum() * 2.88 + z + 600 + 180;
+			int deg_end = deg_start + 90;
 
-	if (prev_index_size != 0) {
-
-		this->parent_destination_group.erase(this->parent_destination_group.begin(), this->parent_destination_group.begin() + prev_index_size);
-	}
-
-	for (int g = 0; g < this->parent_actor_group.size(); g++) {
-
-		if (ofGetFrameNum() % frame_span == 0) {
-
-			prev_index_size = this->destination_group_list[g].size();
-		}
-
-		for (auto& actor : this->actor_group_list[g]) {
-
-			actor->update(frame_span, this->location_group_list[g], this->next_index_group_list[g], this->destination_group_list[g]);
-		}
-
-		if (prev_index_size != 0) {
-
-			this->destination_group_list[g].erase(this->destination_group_list[g].begin(), this->destination_group_list[g].begin() + prev_index_size);
+			this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), radius, 5, 15, deg_start, deg_end);
 		}
 	}
 }
@@ -234,30 +37,16 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
+	ofRotateX(270);
 
-	for (int g = 0; g < this->parent_actor_group.size(); g++) {
+	ofSetColor(239);
+	this->face.draw();
 
-		ofSetLineWidth(0.5);
-		ofSetColor(255);
-		ofDrawRectangle(this->parent_actor_group[g]->getLocation(), 300, 300);
-
-		for (auto& actor : this->actor_group_list[g]) {
-
-			for (int i = 0; i < actor->getLog().size() - 1; i++) {
-
-				auto loc_1 = actor->getLog()[i] + this->parent_actor_group[g]->getLog()[i];
-				auto loc_2 = actor->getLog()[i + 1] + this->parent_actor_group[g]->getLog()[i + 1];
-
-				ofSetColor(ofColor(actor->getColor(), ofMap(i, 0, actor->getLog().size(), 0, 255)));
-				ofSetLineWidth(ofMap(i, 0, actor->getLog().size(), 0, 2));
-				ofDrawLine(loc_1, loc_2);
-			}
-		}
-	}
+	ofSetColor(39);
+	this->frame.drawWireframe();
 
 	this->cam.end();
 
-	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -272,9 +61,77 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
-	*/
 }
 
+//--------------------------------------------------------------
+void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, int deg_start, int deg_end) {
+
+	if (deg_start == deg_end) { return; }
+
+	int index = face_target.getNumVertices();
+
+	for (int deg = deg_start; deg <= deg_end; deg += 1) {
+
+		auto face_index = face_target.getNumVertices();
+
+		vector<glm::vec3> vertices;
+		vertices.push_back(glm::vec3((radius + width * 0.5) * cos(deg * DEG_TO_RAD), (radius + width * 0.5) * sin(deg * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3((radius + width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius + width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3((radius + width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius + width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * 0.5));
+		vertices.push_back(glm::vec3((radius + width * 0.5) * cos(deg * DEG_TO_RAD), (radius + width * 0.5) * sin(deg * DEG_TO_RAD), height * 0.5));
+
+		vertices.push_back(glm::vec3((radius - width * 0.5) * cos(deg * DEG_TO_RAD), (radius - width * 0.5) * sin(deg * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3((radius - width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius - width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3((radius - width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius - width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * 0.5));
+		vertices.push_back(glm::vec3((radius - width * 0.5) * cos(deg * DEG_TO_RAD), (radius - width * 0.5) * sin(deg * DEG_TO_RAD), height * 0.5));
+
+		for (auto& vertex : vertices) {
+
+			vertex += location;
+		}
+
+		face_target.addVertices(vertices);
+
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 2);
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 3);
+
+		face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 6);
+		face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 7);
+
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5);
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 1);
+
+		face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 7); face_target.addIndex(face_index + 6);
+		face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 2);
+
+		auto frame_index = frame_target.getNumVertices();
+
+		frame_target.addVertices(vertices);
+
+		frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 1);
+		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
+		frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 5);
+		frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 7);
+	}
+
+	face_target.addIndex(index + 0); face_target.addIndex(index + 3); face_target.addIndex(index + 7);
+	face_target.addIndex(index + 0); face_target.addIndex(index + 7); face_target.addIndex(index + 4);
+
+	frame_target.addIndex(index + 0); frame_target.addIndex(index + 3);
+	frame_target.addIndex(index + 0); frame_target.addIndex(index + 4);
+	frame_target.addIndex(index + 7); frame_target.addIndex(index + 3);
+	frame_target.addIndex(index + 7); frame_target.addIndex(index + 4);
+
+	index = frame_target.getNumVertices() - 8;
+
+	face_target.addIndex(index + 1); face_target.addIndex(index + 2); face_target.addIndex(index + 6);
+	face_target.addIndex(index + 1); face_target.addIndex(index + 6); face_target.addIndex(index + 5);
+
+	frame_target.addIndex(index + 1); frame_target.addIndex(index + 2);
+	frame_target.addIndex(index + 1); frame_target.addIndex(index + 5);
+	frame_target.addIndex(index + 6); frame_target.addIndex(index + 2);
+	frame_target.addIndex(index + 6); frame_target.addIndex(index + 5);
+}
 
 //--------------------------------------------------------------
 int main() {

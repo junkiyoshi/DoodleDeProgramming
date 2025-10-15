@@ -1,26 +1,6 @@
 #pragma once
 #include "ofMain.h"
 
-class Actor {
-public:
-	Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list);
-	void update(const int& frame_span, vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list);
-	glm::vec3 getLocation();
-	glm::vec3 getLocation(int i);
-	vector<glm::vec3> getLog();
-	void setColor(ofColor color);
-	ofColor getColor();
-
-private:
-
-	int select_index;
-	int next_index;
-
-	glm::vec3 location;
-	vector<glm::vec3> log;
-	ofColor color;
-};
-
 class ofApp : public ofBaseApp {
 
 public:
@@ -38,15 +18,8 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	vector<glm::vec3> parent_location_group;
-	vector<vector<int>> parent_next_index_group;
-	vector<int> parent_destination_group;
-	vector<std::unique_ptr<Actor>> parent_actor_group;
-
-	vector<vector<glm::vec3>> location_group_list;
-	vector<vector<vector<int>>> next_index_group_list;
-	vector<vector<int>> destination_group_list;
-	vector<vector<std::unique_ptr<Actor>>> actor_group_list;
+	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, int deg_start, int deg_end);
 
 	ofEasyCam cam;
+	ofMesh face, frame;
 };
