@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(1.5);
 	ofEnableDepthTest();
 
@@ -21,15 +21,15 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	for (int z = -600; z <= 600; z += 20) {
+	int z = 0;
 
-		for (int radius = 150; radius <= 300; radius += 150) {
+	float deg_start = ofGetFrameNum() * 0.72;
+	for (int radius = 150; radius <= 360; radius += 10) {
 
-			int deg_start = radius == 150 ? ofGetFrameNum() * 2.88 + z + 600 : ofGetFrameNum() * 2.88 + z + 600 + 180;
-			int deg_end = deg_start + 90;
+		deg_start += ofGetFrameNum() * 0.72;
+		int deg_end = deg_start + 60;
 
-			this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), radius, 5, 15, deg_start, deg_end);
-		}
+		this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), radius, 8, 150, deg_start, deg_end);
 	}
 }
 
@@ -39,14 +39,15 @@ void ofApp::draw() {
 	this->cam.begin();
 	ofRotateX(270);
 
-	ofSetColor(239);
+	ofSetColor(39);
 	this->face.draw();
 
-	ofSetColor(39);
+	ofSetColor(239);
 	this->frame.drawWireframe();
 
 	this->cam.end();
 
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -61,6 +62,7 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
+	*/
 }
 
 //--------------------------------------------------------------
