@@ -18,12 +18,9 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float size);
-	void setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float height, float width, float depth);
-
-	ofEasyCam cam;
-	ofMesh face, frame;
-
-	vector<glm::vec3> location_list;
+	vector<glm::vec2> location_list;
+	vector<glm::vec2> velocity_list;
+	vector<float> speed_list;
+	vector<float> life_list;
 	vector<ofColor> color_list;
 };
