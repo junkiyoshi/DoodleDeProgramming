@@ -6,8 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_SUBTRACT);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
@@ -17,18 +17,18 @@ void ofApp::update() {
 	for (int i = 0; i < 500; i++) {
 
 		auto deg = ofRandom(360);
-		auto location = glm::vec2(30 * cos(deg * DEG_TO_RAD), 30 * sin(deg * DEG_TO_RAD));
+		auto location = glm::vec2(320 * cos(deg * DEG_TO_RAD), 320 * sin(deg * DEG_TO_RAD));
 
 		this->location_list.push_back(location);
 
-		auto next = glm::vec2(31 * cos((deg + 1) * DEG_TO_RAD), 31 * sin((deg + 1) * DEG_TO_RAD));
+		auto next = glm::vec2(270 * cos((deg + 90) * DEG_TO_RAD), 270 * sin((deg + 90) * DEG_TO_RAD));
 		this->velocity_list.push_back(next - location);
 
 		color.setHsb(ofMap(deg, 0, 360, 0, 255), 200, 255);
 		this->color_list.push_back(color);
 
 		this->speed_list.push_back(ofRandom(2, 6));
-		this->life_list.push_back(80);
+		this->life_list.push_back(60);
 
 	}
 
@@ -59,7 +59,7 @@ void ofApp::draw() {
 
 	for (int i = 0; i < this->location_list.size(); i++) {
 
-		ofSetColor(this->color_list[i], ofMap(this->life_list[i], 0, 80, 0, 255));
+		ofSetColor(this->color_list[i], ofMap(this->life_list[i], 0, 60, 0, 255));
 		ofDrawCircle(this->location_list[i], 3);
 	}
 
