@@ -18,9 +18,5 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	vector<glm::vec2> location_list;
-	vector<glm::vec2> velocity_list;
-	vector<float> speed_list;
-	vector<float> life_list;
-	vector<ofColor> color_list;
+	ofEasyCam cam;
 };

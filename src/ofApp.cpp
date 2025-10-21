@@ -4,64 +4,54 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
+	ofBackground(239);
+	ofSetColor(0);
+	ofNoFill();
+	ofSetLineWidth(1.5);
 }
-
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofColor color;
-	for (int i = 0; i < 500; i++) {
-
-		auto deg = ofRandom(360);
-		auto location = glm::vec2(320 * cos(deg * DEG_TO_RAD), 320 * sin(deg * DEG_TO_RAD));
-
-		this->location_list.push_back(location);
-
-		auto next = glm::vec2(270 * cos((deg + 90) * DEG_TO_RAD), 270 * sin((deg + 90) * DEG_TO_RAD));
-		this->velocity_list.push_back(next - location);
-
-		color.setHsb(ofMap(deg, 0, 360, 0, 255), 200, 255);
-		this->color_list.push_back(color);
-
-		this->speed_list.push_back(ofRandom(2, 6));
-		this->life_list.push_back(60);
-
-	}
-
-	for (int i = this->location_list.size() - 1; i >= 0; i--) {
-
-		auto fueture = glm::normalize(this->velocity_list[i]) * 45;
-		auto deg = ofMap(ofNoise(glm::vec3(this->location_list[i] * 0.01, ofGetFrameNum() * 0.001)), 0, 1, -360, 360);
-		fueture = fueture + glm::vec2(10 * cos(deg * DEG_TO_RAD), 10 * sin(deg * DEG_TO_RAD));
-		this->location_list[i] += glm::normalize(fueture) * this->speed_list[i];
-
-		this->life_list[i] -= 1;
-
-		if (this->life_list[i] < 0) {
-
-			this->location_list.erase(this->location_list.begin() + i);
-			this->velocity_list.erase(this->velocity_list.begin() + i);
-			this->speed_list.erase(this->speed_list.begin() + i);
-			this->life_list.erase(this->life_list.begin() + i);
-			this->color_list.erase(this->color_list.begin() + i);
-		}
-	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
+	this->cam.begin();
+	ofRotateX(270);
+	ofRotateZ(ofGetFrameNum() * 0.77);
 
-	for (int i = 0; i < this->location_list.size(); i++) {
+	int deg_span = 5;
 
-		ofSetColor(this->color_list[i], ofMap(this->life_list[i], 0, 60, 0, 255));
-		ofDrawCircle(this->location_list[i], 3);
+	auto target_deg = ofGetFrameNum() % 360;
+	for (int radius = 50; radius <= 250; radius += 200) {
+
+		vector<glm::vec3> vertices, vertices_2;
+		for (int deg = 0; deg < 360; deg += deg_span) {
+
+			auto location = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
+			auto len = ofMap(ofNoise(glm::vec4(location * 0.01, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
+
+			auto location_2 = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), len);
+
+			ofDrawLine(location, location_2);
+
+			vertices.push_back(location);
+			vertices_2.push_back(location_2);
+		}
+
+		ofBeginShape();
+		ofVertices(vertices);
+		ofEndShape(true);
+
+		ofBeginShape();
+		ofVertices(vertices_2);
+		ofEndShape(true);
 	}
+
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
