@@ -6,10 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(0);
-	ofNoFill();
-	ofSetLineWidth(1.5);
+	ofBackground(39);
+	ofSetLineWidth(2);
+	ofEnableDepthTest();
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 //--------------------------------------------------------------
 void ofApp::update() {
@@ -23,32 +23,36 @@ void ofApp::draw() {
 	ofRotateX(270);
 	ofRotateZ(ofGetFrameNum() * 0.77);
 
-	int deg_span = 5;
-
 	auto target_deg = ofGetFrameNum() % 360;
-	for (int radius = 50; radius <= 250; radius += 200) {
+	auto deg_span = 5;
 
-		vector<glm::vec3> vertices, vertices_2;
-		for (int deg = 0; deg < 360; deg += deg_span) {
+	for (auto radius = 50; radius <= 300; radius += 50) {
 
-			auto location = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
-			auto len = ofMap(ofNoise(glm::vec4(location * 0.01, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
+		for (auto deg = 0; deg < 360; deg += deg_span) {
 
-			auto location_2 = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), len);
+			auto location_1 = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
+			auto location_2 = glm::vec3(radius * cos((deg + deg_span) * DEG_TO_RAD), radius * sin((deg + deg_span) * DEG_TO_RAD), 0);
+			auto len_1 = ofMap(ofNoise(glm::vec4(location_1 * 0.005, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
+			auto len_2 = ofMap(ofNoise(glm::vec4(location_2 * 0.005, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
 
-			ofDrawLine(location, location_2);
+			vector<glm::vec3> vertices;
+			vertices.push_back(location_1);
+			vertices.push_back(location_2);
+			vertices.push_back(location_2 + glm::vec3(0, 0, len_2));
+			vertices.push_back(location_1 + glm::vec3(0, 0, len_1));
 
-			vertices.push_back(location);
-			vertices_2.push_back(location_2);
+			ofFill();
+			ofSetColor(39, 39, 239, 128);
+			ofBeginShape();
+			ofVertices(vertices);
+			ofEndShape(true);
+
+			ofNoFill();
+			ofSetColor(39, 39, 239);
+			ofBeginShape();
+			ofVertices(vertices);
+			ofEndShape(true);
 		}
-
-		ofBeginShape();
-		ofVertices(vertices);
-		ofEndShape(true);
-
-		ofBeginShape();
-		ofVertices(vertices_2);
-		ofEndShape(true);
 	}
 
 	this->cam.end();
