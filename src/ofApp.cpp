@@ -6,11 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(2);
-	ofEnableDepthTest();
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
+	ofBackground(239);
+	ofSetLineWidth(1.5);
 }
+
 //--------------------------------------------------------------
 void ofApp::update() {
 
@@ -19,43 +18,36 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(270);
-	ofRotateZ(ofGetFrameNum() * 0.77);
+	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5 + 100);
+	ofRotate(270);
 
-	auto target_deg = ofGetFrameNum() % 360;
-	auto deg_span = 5;
+	ofColor color;
+	for (int radius = 0; radius <= 400; radius += 10) {
 
-	for (auto radius = 50; radius <= 300; radius += 50) {
+		int deg_start = radius * 0.5 + ofGetFrameNum() * 2.16;
+		for (int deg = deg_start; deg < deg_start + 360; deg += 90) {
 
-		for (auto deg = 0; deg < 360; deg += deg_span) {
+			vector<glm::vec2> vertices;
+			for (int tmp_deg = deg; tmp_deg <= deg + 80; tmp_deg += 1) {
 
-			auto location_1 = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
-			auto location_2 = glm::vec3(radius * cos((deg + deg_span) * DEG_TO_RAD), radius * sin((deg + deg_span) * DEG_TO_RAD), 0);
-			auto len_1 = ofMap(ofNoise(glm::vec4(location_1 * 0.005, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
-			auto len_2 = ofMap(ofNoise(glm::vec4(location_2 * 0.005, ofGetFrameNum() * 0.01)), 0, 1, -250, 250);
+				vertices.push_back(glm::vec2(this->make_point(radius, tmp_deg)));
+			}
 
-			vector<glm::vec3> vertices;
-			vertices.push_back(location_1);
-			vertices.push_back(location_2);
-			vertices.push_back(location_2 + glm::vec3(0, 0, len_2));
-			vertices.push_back(location_1 + glm::vec3(0, 0, len_1));
+			color.setHsb(ofMap(deg, deg_start, deg_start + 360, 0, 255), 255, 255);
 
 			ofFill();
-			ofSetColor(39, 39, 239, 128);
+			ofSetColor(239);
 			ofBeginShape();
 			ofVertices(vertices);
 			ofEndShape(true);
 
 			ofNoFill();
-			ofSetColor(39, 39, 239);
+			ofSetColor(color);
 			ofBeginShape();
 			ofVertices(vertices);
 			ofEndShape(true);
 		}
 	}
-
-	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -73,6 +65,24 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
+
+//--------------------------------------------------------------
+glm::vec2 ofApp::make_point(int radius, int deg) {
+
+	deg = deg % 360;
+
+	int deg_a = (deg / 120) * 120;
+	int deg_b = deg_a + 120;
+
+	int remainder = deg % 120;
+	int diff = deg - deg_a;
+
+	auto point_a = glm::vec2(radius * cos(deg_a * DEG_TO_RAD), radius * sin(deg_a * DEG_TO_RAD));
+	auto point_b = glm::vec2(radius * cos(deg_b * DEG_TO_RAD), radius * sin(deg_b * DEG_TO_RAD));
+	auto distance = point_b - point_a;
+
+	return point_a + (distance / 120) * diff;
 }
 
 //--------------------------------------------------------------
