@@ -6,8 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(1.5);
+	ofBackground(39);
+	ofSetLineWidth(2);
 }
 
 //--------------------------------------------------------------
@@ -22,21 +22,27 @@ void ofApp::draw() {
 	ofRotate(270);
 
 	ofColor color;
-	for (int radius = 0; radius <= 400; radius += 10) {
+	for (int radius = 180; radius <= 400; radius += 220) {
+
+		ofPushMatrix();
+		if (radius < 400) {
+
+			ofRotate(ofGetFrameNum() * 2.16 + 75);
+		}
 
 		int deg_start = radius * 0.5 + ofGetFrameNum() * 2.16;
-		for (int deg = deg_start; deg < deg_start + 360; deg += 90) {
+		for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
 
 			vector<glm::vec2> vertices;
-			for (int tmp_deg = deg; tmp_deg <= deg + 80; tmp_deg += 1) {
+			for (int tmp_deg = deg; tmp_deg <= deg + 110; tmp_deg += 1) {
 
 				vertices.push_back(glm::vec2(this->make_point(radius, tmp_deg)));
 			}
 
-			color.setHsb(ofMap(deg, deg_start, deg_start + 360, 0, 255), 255, 255);
+			color.setHsb(ofMap(deg, deg_start, deg_start + 360, 0, 255), 180, 255);
 
 			ofFill();
-			ofSetColor(239);
+			ofSetColor(ofColor(color, 64));
 			ofBeginShape();
 			ofVertices(vertices);
 			ofEndShape(true);
@@ -47,6 +53,8 @@ void ofApp::draw() {
 			ofVertices(vertices);
 			ofEndShape(true);
 		}
+
+		ofPopMatrix();
 	}
 
 	/*
