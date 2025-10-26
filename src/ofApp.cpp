@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 
 	this->noise_param = ofRandom(1000);
 }
@@ -16,31 +16,47 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	if (ofGetFrameNum() % 25 < 5) {
+	if (ofGetFrameNum() % 50 < 25) {
 
-		this->noise_param += ofMap(ofGetFrameNum() % 25, 0, 5, 0.15, 0);
+		this->noise_param += ofMap(ofGetFrameNum() % 25, 0, 25, 0.15, 0);
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	for (int x = 0; x <= ofGetWidth(); x += 20) {
+	ofTranslate(ofGetWindowSize() * 0.5);
 
-		auto y = ofMap(ofNoise(x * 0.0035, this->noise_param), 0, 1, 45, ofGetHeight()) - 45;
+	auto big_radius = 330;
+	auto small_radius = 180;
+	auto len = 90;
 
-		this->draw_arrow(glm::vec2(x, ofGetHeight()), glm::vec2(x, y + 80), 18, ofColor(39));
-		this->draw_arrow(glm::vec2(x, 0), glm::vec2(x, y - 80), 18, ofColor(39));
+	for (int deg = 0; deg < 360; deg += 4) {
+
+		auto l = ofMap(ofNoise(cos(deg * DEG_TO_RAD) * 4, sin(deg * DEG_TO_RAD) * 4, this->noise_param), 0, 1, 0, len);
+
+		auto location = glm::vec2(big_radius * cos(deg * DEG_TO_RAD), big_radius * sin(deg * DEG_TO_RAD));
+		auto target = glm::vec2((big_radius - l) * cos(deg * DEG_TO_RAD), (big_radius - l) * sin(deg * DEG_TO_RAD));
+
+		this->draw_arrow(location, target, 8, ofColor(39));
+
+		l = len - l;
+
+		location = glm::vec2(small_radius * cos(deg * DEG_TO_RAD), small_radius * sin(deg * DEG_TO_RAD));
+		target = glm::vec2((small_radius + l) * cos(deg * DEG_TO_RAD), (small_radius + l) * sin(deg * DEG_TO_RAD));
+
+		this->draw_arrow(location, target, 8, ofColor(39));
 	}
 
-	for (int i = 0; i < 100; i++) {
+	ofFill();
+	for (int i = 0; i < 40; i++) {
 
-		auto x = (int)(ofGetFrameNum() * 14.4 + i) % ofGetWindowWidth();
-		auto y = ofMap(ofNoise(x * 0.0035,  this->noise_param), 0, 1, 45, ofGetHeight()) - 45;
+		auto deg = ofGetFrameNum() * 2.88 + i * 2;
+		auto l = ofMap(ofNoise(cos(deg * DEG_TO_RAD) * 4, sin(deg * DEG_TO_RAD) * 4, this->noise_param), 0, 1, 0, len);
+		auto radius = big_radius - l - 30;
+		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
 
-		ofFill();
-		ofSetColor(39);
-		ofDrawCircle(glm::vec2(x, y), i * 0.07);
+		ofDrawCircle(location, ofMap(i, 0, 40, 1, 3));
 	}
 
 	/*
