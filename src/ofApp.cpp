@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 }
 
@@ -20,16 +20,12 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
 
-
-	auto deg = ofMap(ofNoise(ofGetFrameNum() * 0.008), 0, 1, -360 * 2, 360 * 2);
-	auto source = glm::vec2(150 * cos(deg * DEG_TO_RAD), 150 * sin(deg * DEG_TO_RAD));
-
-	ofNoFill();
-	ofDrawCircle(source, 30);
+	auto noise_deg = ofMap(ofNoise(ofGetFrameNum() * 0.01), 0, 1, -360, 360);
 
 	for (int deg = 0; deg < 360; deg += 10) {
 
-		this->draw_arrow(source + glm::vec2(30 * cos(deg * DEG_TO_RAD), 30 * sin(deg * DEG_TO_RAD)), glm::vec2(300 * cos(deg * DEG_TO_RAD), 300 * sin(deg * DEG_TO_RAD)), 18, ofColor(39));
+		this->draw_arrow(glm::vec2(300 * cos(deg * DEG_TO_RAD), 300 * sin(deg * DEG_TO_RAD)),
+			glm::vec2(250 * cos((deg + noise_deg) * DEG_TO_RAD), 250 * sin((deg + noise_deg) * DEG_TO_RAD)), 18, ofColor(239));
 		ofDrawCircle(glm::vec2(300 * cos(deg * DEG_TO_RAD), 300 * sin(deg * DEG_TO_RAD)), 3);
 	}
 
