@@ -6,12 +6,14 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	ofSeedRandom(39);
 }
 
 //--------------------------------------------------------------
@@ -21,35 +23,49 @@ void ofApp::draw() {
 
 	auto size = 20;
 	auto base_radius = 400;
+	auto noise_seed = ofRandom(1000);
 
-	for (int deg = 0; deg < 360; deg += 6) {
+	ofColor color;
+	for (int i = 0; i < 3; i++) {
 
-		auto base_location = glm::vec2(base_radius * cos(deg * DEG_TO_RAD), base_radius * sin(deg * DEG_TO_RAD));
+		color.setHsb(ofMap(i, 0, 3, 0, 255), 180, 255);
+		noise_seed += 0.05;
 
-		auto base_noise_value = ofNoise(glm::vec3(base_location * 0.008, ofGetFrameNum() * 0.025));
-		auto prev_base_noise_value = ofNoise(glm::vec3(base_location * 0.008, (ofGetFrameNum() - 1) * 0.025));
+		for (int deg = 0; deg < 360; deg += 6) {
 
-		auto radius = base_radius * 0.5;
-		auto prev_radius = base_radius * 0.5;
+			auto base_location = glm::vec2(base_radius * cos(deg * DEG_TO_RAD), base_radius * sin(deg * DEG_TO_RAD));
 
-		if (base_noise_value < 0.3) { radius = ofMap(base_noise_value, 0, 0.3, base_radius * 0, base_radius * 0.5); }
-		else if (base_noise_value > 0.7) { radius = ofMap(base_noise_value, 0.7, 1, base_radius * 0.5, base_radius * 0.9); }
+			auto base_noise_value = ofNoise(glm::vec4(noise_seed, base_location * 0.01, ofGetFrameNum() * 0.025));
+			auto prev_base_noise_value = ofNoise(glm::vec4(noise_seed, base_location * 0.01, (ofGetFrameNum() - 1) * 0.025));
 
-		if (prev_base_noise_value < 0.3) { prev_radius = ofMap(prev_base_noise_value, 0, 0.3, base_radius * 0, base_radius * 0.5); }
-		else if (prev_base_noise_value > 0.7) { prev_radius = ofMap(prev_base_noise_value, 0.7, 1, base_radius * 0.5, base_radius * 0.9); }
+			auto radius = base_radius * 0.5;
+			auto prev_radius = base_radius * 0.5;
 
-		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-		auto prev_location = glm::vec2(prev_radius * cos(deg * DEG_TO_RAD), prev_radius * sin(deg * DEG_TO_RAD));
+			if (base_noise_value < 0.45) { radius = ofMap(base_noise_value, 0, 0.45, base_radius * 0, base_radius * 0.5); }
+			else if (base_noise_value > 0.55) { radius = ofMap(base_noise_value, 0.55, 1, base_radius * 0.5, base_radius * 0.9); }
 
-		if (location == prev_location) {
+			if (prev_base_noise_value < 0.45) { prev_radius = ofMap(prev_base_noise_value, 0, 0.45, base_radius * 0, base_radius * 0.5); }
+			else if (prev_base_noise_value > 0.55) { prev_radius = ofMap(prev_base_noise_value, 0.55, 1, base_radius * 0.5, base_radius * 0.9); }
 
-			ofFill();
-			ofSetColor(39);
-			ofDrawCircle(prev_location, size * 0.5);
-		}
-		else {
+			auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+			auto prev_location = glm::vec2(prev_radius * cos(deg * DEG_TO_RAD), prev_radius * sin(deg * DEG_TO_RAD));
 
-			this->draw_arrow(prev_location, location, radius < base_radius * 0.5 ? ofMap(radius, 3, base_radius * 0.5, 0, size) : size, ofColor(39), ofColor(239));
+			if (location == prev_location) {
+
+				ofFill();
+				ofSetColor(ofColor(color, 200));
+				ofDrawCircle(prev_location, size * 0.5);
+			}
+			else {
+
+				ofFill();
+				ofSetColor(ofColor(color, 128));
+				ofDrawCircle(location, radius < base_radius * 0.5 ? ofMap(radius, 3, base_radius * 0.5, 0, size * 0.5) : size * 0.5);
+
+				ofNoFill();
+				ofSetColor(color);
+				ofDrawCircle(location, radius < base_radius * 0.5 ? ofMap(radius, 3, base_radius * 0.5, 0, size * 0.5) : size * 0.5);
+			}
 		}
 	}
 
@@ -69,44 +85,6 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
-
-//--------------------------------------------------------------
-void ofApp::draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor fill_color, ofColor no_fill_color) {
-
-	auto angle = std::atan2(target.y - location.y, target.x - location.x);
-
-	ofSetColor(fill_color);
-	ofFill();
-	ofBeginShape();
-	ofVertex(location + glm::vec2(size * cos(angle), size * sin(angle)));
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)));
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)));
-	ofEndShape();
-
-	ofBeginShape();
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)) * 0.25);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(size * cos(angle), size * sin(angle)) * 0.5);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(size * cos(angle), size * sin(angle)) * 0.5);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)) * 0.25);
-	ofEndShape();
-
-	ofSetColor(no_fill_color);
-	ofNoFill();
-	ofBeginShape();
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)) * 0.25);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)));
-	ofVertex(location + glm::vec2(size * cos(angle), size * sin(angle)));
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)));
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)) * 0.25);
-	ofEndShape();
-
-	ofBeginShape();
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)) * 0.25);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle - PI * 0.5), size * 0.5 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(size * cos(angle), size * sin(angle)) * 0.5);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(size * cos(angle), size * sin(angle)) * 0.5);
-	ofVertex(location + glm::vec2(size * 0.5 * cos(angle + PI * 0.5), size * 0.5 * sin(angle + PI * 0.5)) * 0.25);
-	ofEndShape();
 }
 
 //--------------------------------------------------------------
