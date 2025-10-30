@@ -14,7 +14,13 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
+	void mouseEntered(int x, int y) {};
+	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
+
+	void draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color);
+
+	ofEasyCam cam;
 };

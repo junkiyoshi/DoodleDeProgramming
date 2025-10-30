@@ -6,8 +6,9 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
+	ofBackground(239);
+	ofEnableDepthTest();
+	ofSetLineWidth(2);
 }
 
 //--------------------------------------------------------------
@@ -19,59 +20,31 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
+	this->cam.begin();
+	ofRotateY(ofGetFrameNum() * 1.44);
 
-	auto size = 20;
-	auto base_radius = 400;
-	auto noise_seed = ofRandom(1000);
+	float radius = 200;
+	for (int deg = 0; deg < 360; deg += 5) {
 
-	ofColor color;
-	for (int i = 0; i < 3; i++) {
+		ofPushMatrix();
+		ofRotateZ(deg);
+		ofTranslate(glm::vec2(radius * cos(0 * DEG_TO_RAD), radius * sin(0 * DEG_TO_RAD)));
 
-		color.setHsb(ofMap(i, 0, 3, 0, 255), 180, 255);
-		noise_seed += 0.05;
+		auto noise_location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+		auto noise_deg = ofMap(ofNoise(glm::vec3(noise_location * 0.005, ofGetFrameNum() * 0.005)), 0, 1, -360, 360);
 
-		for (int deg = 0; deg < 360; deg += 6) {
+		ofRotateY(noise_deg);
 
-			auto base_location = glm::vec2(base_radius * cos(deg * DEG_TO_RAD), base_radius * sin(deg * DEG_TO_RAD));
+		this->draw_arrow(glm::vec2(), glm::vec2(100 * cos(0 * DEG_TO_RAD), 100 * sin(0 * DEG_TO_RAD)), 18, ofColor(0));
 
-			auto base_noise_value = ofNoise(glm::vec4(noise_seed, base_location * 0.01, ofGetFrameNum() * 0.025));
-			auto prev_base_noise_value = ofNoise(glm::vec4(noise_seed, base_location * 0.01, (ofGetFrameNum() - 1) * 0.025));
-
-			auto radius = base_radius * 0.5;
-			auto prev_radius = base_radius * 0.5;
-
-			if (base_noise_value < 0.45) { radius = ofMap(base_noise_value, 0, 0.45, base_radius * 0, base_radius * 0.5); }
-			else if (base_noise_value > 0.55) { radius = ofMap(base_noise_value, 0.55, 1, base_radius * 0.5, base_radius * 0.9); }
-
-			if (prev_base_noise_value < 0.45) { prev_radius = ofMap(prev_base_noise_value, 0, 0.45, base_radius * 0, base_radius * 0.5); }
-			else if (prev_base_noise_value > 0.55) { prev_radius = ofMap(prev_base_noise_value, 0.55, 1, base_radius * 0.5, base_radius * 0.9); }
-
-			auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-			auto prev_location = glm::vec2(prev_radius * cos(deg * DEG_TO_RAD), prev_radius * sin(deg * DEG_TO_RAD));
-
-			if (location == prev_location) {
-
-				ofFill();
-				ofSetColor(ofColor(color, 200));
-				ofDrawCircle(prev_location, size * 0.5);
-			}
-			else {
-
-				ofFill();
-				ofSetColor(ofColor(color, 128));
-				ofDrawCircle(location, radius < base_radius * 0.5 ? ofMap(radius, 3, base_radius * 0.5, 0, size * 0.5) : size * 0.5);
-
-				ofNoFill();
-				ofSetColor(color);
-				ofDrawCircle(location, radius < base_radius * 0.5 ? ofMap(radius, 3, base_radius * 0.5, 0, size * 0.5) : size * 0.5);
-			}
-		}
+		ofPopMatrix();
 	}
+
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 450;
+	int start = 250;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -85,6 +58,38 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color) {
+
+	auto angle = std::atan2(target.y - location.y, target.x - location.x);
+	auto distance = glm::distance(target, location);
+
+	if (glm::length(distance) > size * 0.1) {
+
+		ofPushMatrix();
+		ofTranslate(target);
+
+		ofSetColor(color);
+		ofFill();
+		ofBeginShape();
+		ofVertex(glm::vec2(size * cos(angle), size * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)));
+		ofEndShape();
+
+		ofBeginShape();
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25);
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25);
+		ofEndShape();
+
+		ofPopMatrix();
+	}
+
+	ofDrawSphere(glm::vec3(location, 0), 5);
 }
 
 //--------------------------------------------------------------
