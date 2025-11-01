@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 	ofSetLineWidth(2);
 }
@@ -21,21 +21,18 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 1.44);
 
-	float radius = 200;
-	for (int deg = 0; deg < 360; deg += 5) {
+	for(int x = ofGetWindowWidth() * -0.5; x <= ofGetWindowWidth() * 0.5; x += 20) {
 
 		ofPushMatrix();
-		ofRotateZ(deg);
-		ofTranslate(glm::vec2(radius * cos(0 * DEG_TO_RAD), radius * sin(0 * DEG_TO_RAD)));
+		ofTranslate(x, 0);
 
-		auto noise_location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-		auto noise_deg = ofMap(ofNoise(glm::vec3(noise_location * 0.005, ofGetFrameNum() * 0.005)), 0, 1, -360, 360);
+		auto noise_location = glm::vec2(x, 0);
+		auto noise_deg = ofMap(ofNoise(x * 0.0025 + ofGetFrameNum() * 0.01), 0, 1, -720, 720);
 
-		ofRotateY(noise_deg);
+		ofRotateX(noise_deg);
 
-		this->draw_arrow(glm::vec2(), glm::vec2(100 * cos(0 * DEG_TO_RAD), 100 * sin(0 * DEG_TO_RAD)), 18, ofColor(0));
+		this->draw_arrow(glm::vec2(), glm::vec2(0, 150), 18, ofColor(239));
 
 		ofPopMatrix();
 	}
@@ -44,7 +41,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 250;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
