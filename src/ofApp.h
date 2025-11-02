@@ -20,7 +20,6 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color);
-
 	ofEasyCam cam;
+	ofMesh face, frame;
 };

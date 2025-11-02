@@ -6,36 +6,77 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
+	ofBackground(239);
 	ofEnableDepthTest();
-	ofSetLineWidth(2);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_DISABLED);
+
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+
+	float span = 50;
+	for (int x = -3000; x <= 3000; x += span) {
+
+		for (int y = -2400; y <= 2400; y += span) {
+
+			vector<glm::vec3> vertices;
+			vertices.push_back(glm::vec3(x, y, 0));
+			vertices.push_back(glm::vec3(x + span, y, 0));
+			vertices.push_back(glm::vec3(x + span, y + span, 0));
+			vertices.push_back(glm::vec3(x, y + span, 0));
+
+			this->face.addVertices(vertices);
+
+			this->face.addIndex(this->face.getNumVertices() - 1);
+			this->face.addIndex(this->face.getNumVertices() - 4);
+			this->face.addIndex(this->face.getNumVertices() - 3);
+
+			this->face.addIndex(this->face.getNumVertices() - 1);
+			this->face.addIndex(this->face.getNumVertices() - 2);
+			this->face.addIndex(this->face.getNumVertices() - 3);
+
+			this->frame.addVertices(vertices);
+
+			this->frame.addIndex(this->frame.getNumVertices() - 1);
+			this->frame.addIndex(this->frame.getNumVertices() - 2);
+
+			this->frame.addIndex(this->frame.getNumVertices() - 1);
+			this->frame.addIndex(this->frame.getNumVertices() - 4);
+
+			this->frame.addIndex(this->frame.getNumVertices() - 3);
+			this->frame.addIndex(this->frame.getNumVertices() - 4);
+
+			this->frame.addIndex(this->frame.getNumVertices() - 3);
+			this->frame.addIndex(this->frame.getNumVertices() - 2);
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
+	auto index = 0;
+	for (auto& vertex : this->face.getVertices()) {
+
+		auto noise_value = ofNoise(glm::distance(glm::vec3(0, 2700, 0), vertex) * 0.0008 - ofGetFrameNum() * 0.05, vertex.x * 0.00025, vertex.y * 0.00025);
+		vertex.z = pow(ofMap(noise_value, 0, 1, 0, 28), 2);
+
+		this->frame.setVertex(index++, vertex);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
+	ofRotateX(270);
 
-	for(int x = ofGetWindowWidth() * -0.5; x <= ofGetWindowWidth() * 0.5; x += 20) {
+	ofColor color;
+	color.setHsb(ofMap(ofGetFrameNum() % 500, 0, 500, 0, 255), 180, 255);
 
-		ofPushMatrix();
-		ofTranslate(x, 0);
+	ofSetColor(color);
+	this->face.draw();
 
-		auto noise_location = glm::vec2(x, 0);
-		auto noise_deg = ofMap(ofNoise(x * 0.0025 + ofGetFrameNum() * 0.01), 0, 1, -720, 720);
-
-		ofRotateX(noise_deg);
-
-		this->draw_arrow(glm::vec2(), glm::vec2(0, 150), 18, ofColor(239));
-
-		ofPopMatrix();
-	}
+	ofSetColor(0);
+	this->frame.drawWireframe();
 
 	this->cam.end();
 
@@ -55,38 +96,6 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
-
-//--------------------------------------------------------------
-void ofApp::draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color) {
-
-	auto angle = std::atan2(target.y - location.y, target.x - location.x);
-	auto distance = glm::distance(target, location);
-
-	if (glm::length(distance) > size * 0.1) {
-
-		ofPushMatrix();
-		ofTranslate(target);
-
-		ofSetColor(color);
-		ofFill();
-		ofBeginShape();
-		ofVertex(glm::vec2(size * cos(angle), size * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)));
-		ofEndShape();
-
-		ofBeginShape();
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25);
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25);
-		ofEndShape();
-
-		ofPopMatrix();
-	}
-
-	ofDrawSphere(glm::vec3(location, 0), 5);
 }
 
 //--------------------------------------------------------------
