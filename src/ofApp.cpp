@@ -6,16 +6,16 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_DISABLED);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	float span = 50;
-	for (int x = -3000; x <= 3000; x += span) {
+	for (int x = -1200; x <= 1200; x += span) {
 
-		for (int y = -2400; y <= 2400; y += span) {
+		for (int y = -1200; y <= 1200; y += span) {
 
 			vector<glm::vec3> vertices;
 			vertices.push_back(glm::vec3(x, y, 0));
@@ -56,8 +56,8 @@ void ofApp::update() {
 	auto index = 0;
 	for (auto& vertex : this->face.getVertices()) {
 
-		auto noise_value = ofNoise(glm::distance(glm::vec3(0, 2700, 0), vertex) * 0.0008 - ofGetFrameNum() * 0.05, vertex.x * 0.00025, vertex.y * 0.00025);
-		vertex.z = pow(ofMap(noise_value, 0, 1, 0, 28), 2);
+		auto noise_value = ofNoise(glm::distance(glm::vec3(0, 2700, 0), vertex) * 0.001 - ofGetFrameNum() * 0.01, vertex.x * 0.00025, vertex.y * 0.00025);
+		vertex.z = ofMap(noise_value, 0, 1, -300, 300);
 
 		this->frame.setVertex(index++, vertex);
 	}
@@ -67,20 +67,17 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(270);
+	ofRotateX(90);
+	ofRotateZ(270);
 
-	ofColor color;
-	color.setHsb(ofMap(ofGetFrameNum() % 500, 0, 500, 0, 255), 180, 255);
-
-	ofSetColor(color);
+	ofSetColor(39, 32);
 	this->face.draw();
 
-	ofSetColor(0);
+	ofSetColor(255);
 	this->frame.drawWireframe();
 
 	this->cam.end();
 
-	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -95,7 +92,6 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
-	*/
 }
 
 //--------------------------------------------------------------
