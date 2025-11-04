@@ -1,4 +1,4 @@
-#include "ofApp.h"
+#include "ofApp.h"	
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,80 +6,77 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
-
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
-
-	float span = 50;
-	for (int x = -1200; x <= 1200; x += span) {
-
-		for (int y = -1200; y <= 1200; y += span) {
-
-			vector<glm::vec3> vertices;
-			vertices.push_back(glm::vec3(x, y, 0));
-			vertices.push_back(glm::vec3(x + span, y, 0));
-			vertices.push_back(glm::vec3(x + span, y + span, 0));
-			vertices.push_back(glm::vec3(x, y + span, 0));
-
-			this->face.addVertices(vertices);
-
-			this->face.addIndex(this->face.getNumVertices() - 1);
-			this->face.addIndex(this->face.getNumVertices() - 4);
-			this->face.addIndex(this->face.getNumVertices() - 3);
-
-			this->face.addIndex(this->face.getNumVertices() - 1);
-			this->face.addIndex(this->face.getNumVertices() - 2);
-			this->face.addIndex(this->face.getNumVertices() - 3);
-
-			this->frame.addVertices(vertices);
-
-			this->frame.addIndex(this->frame.getNumVertices() - 1);
-			this->frame.addIndex(this->frame.getNumVertices() - 2);
-
-			this->frame.addIndex(this->frame.getNumVertices() - 1);
-			this->frame.addIndex(this->frame.getNumVertices() - 4);
-
-			this->frame.addIndex(this->frame.getNumVertices() - 3);
-			this->frame.addIndex(this->frame.getNumVertices() - 4);
-
-			this->frame.addIndex(this->frame.getNumVertices() - 3);
-			this->frame.addIndex(this->frame.getNumVertices() - 2);
-		}
-	}
+	ofBackground(239);
+	ofSetColor(39);
+	ofNoFill();
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_MULTIPLY);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	auto index = 0;
-	for (auto& vertex : this->face.getVertices()) {
+	ofSeedRandom(39);
 
-		auto noise_value = ofNoise(glm::distance(glm::vec3(0, 2700, 0), vertex) * 0.001 - ofGetFrameNum() * 0.01, vertex.x * 0.00025, vertex.y * 0.00025);
-		vertex.z = ofMap(noise_value, 0, 1, -300, 300);
-
-		this->frame.setVertex(index++, vertex);
-	}
+	noise_param += 0.02;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(90);
-	ofRotateZ(270);
+	ofTranslate(ofGetWindowSize() * 0.5 + glm::vec2(0, -50));
 
-	ofSetColor(39, 32);
-	this->face.draw();
+	ofColor color;
+	vector<ofColor> color_list;
+	for (int value = 0; value < 255; value += 170) {
 
-	ofSetColor(255);
-	this->frame.drawWireframe();
+		color.setHsb(value, 255, 255);
+		color_list.push_back(color);
+	}
 
-	this->cam.end();
+	float scale_span = 0.05;
+	float deg_span = 0.05;
+	float noise_seed = ofRandom(1000);
+	for (int i = 0; i < color_list.size(); i++) {
 
+		ofMesh mesh;
+		noise_seed += 0.05;
+		for (float scale = 0; scale < 20; scale += scale_span) {
+
+			for (float deg = 0; deg < 360; deg += deg_span) {
+
+				auto noise_location = this->make_point((deg + deg_span * 0.5) * DEG_TO_RAD) * (scale + scale_span * 0.5);
+				auto noise_value = ofNoise(noise_seed + noise_param, noise_location.x * 0.0085, noise_location.y * 0.0085);
+
+				if (noise_value > 0.4 && noise_value < 0.5) {
+
+					mesh.addVertex(this->make_point(deg * DEG_TO_RAD) * scale);
+					mesh.addVertex(this->make_point((deg + deg_span) * DEG_TO_RAD) * scale);
+					mesh.addVertex(this->make_point((deg + deg_span) * DEG_TO_RAD) * (scale + scale_span));
+					mesh.addVertex(this->make_point(deg * DEG_TO_RAD) * (scale + scale_span));
+
+					mesh.addIndex(mesh.getNumVertices() - 1); mesh.addIndex(mesh.getNumVertices() - 2); mesh.addIndex(mesh.getNumVertices() - 3);
+					mesh.addIndex(mesh.getNumVertices() - 1); mesh.addIndex(mesh.getNumVertices() - 3); mesh.addIndex(mesh.getNumVertices() - 4);
+
+					mesh.addColor(color_list[i]);
+					mesh.addColor(color_list[i]);
+					mesh.addColor(color_list[i]);
+					mesh.addColor(color_list[i]);
+				}
+			}
+		}
+		mesh.draw();
+	}
+
+	ofBeginShape();
+	for (float deg = 0; deg < 360; deg += 1) {
+
+		ofVertex(this->make_point(deg * DEG_TO_RAD) * 20);
+	}
+	ofEndShape(true);
+
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 2;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -92,7 +89,18 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
+	*/
 }
+
+//--------------------------------------------------------------
+// Reference by https://twitter.com/shiffman/status/1095764239665512453
+glm::vec3 ofApp::make_point(float theta) {
+
+	float x = 16 * (pow(sin(theta), 3));
+	float y = 13 * cos(theta) - 5 * cos(2 * theta) - 2 * cos(3 * theta) - cos(4 * theta);
+	return glm::vec3(x, -y, 0);
+}
+
 
 //--------------------------------------------------------------
 int main() {
