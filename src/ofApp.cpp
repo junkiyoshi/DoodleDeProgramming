@@ -6,10 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(39);
+	ofBackground(39);
+	ofSetColor(255);
 	ofNoFill();
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_MULTIPLY);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
@@ -27,9 +27,9 @@ void ofApp::draw() {
 
 	ofColor color;
 	vector<ofColor> color_list;
-	for (int value = 0; value < 255; value += 170) {
+	for (int value = 0; value < 256; value += 64) {
 
-		color.setHsb(value, 255, 255);
+		color.setHsb(value, 180, 255);
 		color_list.push_back(color);
 	}
 
@@ -39,15 +39,15 @@ void ofApp::draw() {
 	for (int i = 0; i < color_list.size(); i++) {
 
 		ofMesh mesh;
-		noise_seed += 0.05;
+		noise_seed += 0.5;
 		for (float scale = 0; scale < 20; scale += scale_span) {
 
 			for (float deg = 0; deg < 360; deg += deg_span) {
 
 				auto noise_location = this->make_point((deg + deg_span * 0.5) * DEG_TO_RAD) * (scale + scale_span * 0.5);
-				auto noise_value = ofNoise(noise_seed + noise_param, noise_location.x * 0.0085, noise_location.y * 0.0085);
+				auto noise_value = ofNoise(noise_seed, noise_location.x * 0.005, noise_location.y * 0.005 + noise_param);
 
-				if (noise_value > 0.4 && noise_value < 0.5) {
+				if (noise_value > 0.45 && noise_value < 0.55) {
 
 					mesh.addVertex(this->make_point(deg * DEG_TO_RAD) * scale);
 					mesh.addVertex(this->make_point((deg + deg_span) * DEG_TO_RAD) * scale);
