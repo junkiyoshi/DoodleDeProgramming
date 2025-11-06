@@ -20,7 +20,8 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	glm::vec3 make_point(float theta);
+	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, glm::vec2 noise_seed);
 
-	float noise_param;
+	ofEasyCam cam;
+	ofMesh face, frame;
 };
