@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -21,12 +21,12 @@ void ofApp::update() {
 
 	auto noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
 
-	this->setRingToMesh(this->face, this->frame, glm::vec3(), 0, 180, 10, noise_seed);
+	this->setRingToMesh(this->face, this->frame, glm::vec3(), 0, 180, 10, noise_seed, ofColor(255, 39, 0), ofColor(255));
 	noise_seed -= 0.008 * 80;
-	for (auto radius = 260; radius < 360; radius += 10) {
+	for (auto radius = 260; radius < 360; radius += 5) {
 
 		noise_seed -= 0.008;
-		this->setRingToMesh(this->face, this->frame, glm::vec3(), radius, 10, 10, noise_seed);
+		this->setRingToMesh(this->face, this->frame, glm::vec3(), radius, 3, 60, noise_seed, ofColor(0), ofColor(255));
 
 	}
 }
@@ -37,17 +37,15 @@ void ofApp::draw() {
 	this->cam.begin();
 	ofRotateY(ofGetFrameNum() * 1.44);
 
-	ofSetColor(39);
 	this->face.draw();
 
-	ofSetColor(239);
 	this->frame.drawWireframe();
 
 	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 250;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -64,12 +62,10 @@ void ofApp::draw() {
 }
 
 //--------------------------------------------------------------
-void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, glm::vec2 noise_seed) {
+void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, glm::vec2 noise_seed, ofColor face_color, ofColor frame_color) {
 
-	auto noise_value = glm::vec2(ofNoise(noise_seed.x, ofGetFrameNum() * 0.002), ofNoise(noise_seed.y, ofGetFrameNum() * 0.002));
-
-	auto angle_x = ofMap(noise_value.x, 0, 1, -PI * 4, PI * 4);
-	auto angle_y = ofMap(noise_value.y, 0, 1, -PI * 4, PI * 4);
+	float angle_x = radius * 0.05 + ofGetFrameNum() * 0.01;
+	float angle_y = radius * 0.05 + ofGetFrameNum() * 0.01;
 
 	auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
 	auto rotation_y = glm::rotate(glm::mat4(), angle_y, glm::vec3(0, 1, 0));
@@ -116,6 +112,12 @@ void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 l
 		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
 		frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 5);
 		frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 7);
+
+		for (int i = 0; i < 8; i++) {
+
+			face_target.addColor(face_color);
+			frame_target.addColor(frame_color);
+		}
 	}
 
 
