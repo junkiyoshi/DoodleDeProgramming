@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
+	ofBackground(239);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -20,14 +20,9 @@ void ofApp::update() {
 	this->frame.clear();
 
 	auto noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
+	for (auto radius = 5; radius < 360; radius += 5) {
 
-	this->setRingToMesh(this->face, this->frame, glm::vec3(), 0, 180, 10, noise_seed, ofColor(255, 39, 0), ofColor(255));
-	noise_seed -= 0.008 * 80;
-	for (auto radius = 260; radius < 360; radius += 5) {
-
-		noise_seed -= 0.008;
 		this->setRingToMesh(this->face, this->frame, glm::vec3(), radius, 3, 60, noise_seed, ofColor(0), ofColor(255));
-
 	}
 }
 
@@ -35,7 +30,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 1.44);
+	ofRotateY(180 + 90);
 
 	this->face.draw();
 
@@ -64,13 +59,18 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, glm::vec2 noise_seed, ofColor face_color, ofColor frame_color) {
 
-	float angle_x = radius * 0.05 + ofGetFrameNum() * 0.01;
-	float angle_y = radius * 0.05 + ofGetFrameNum() * 0.01;
+	auto noise_value = glm::vec2(
+		ofNoise(noise_seed.x, radius * 0.005 + ofGetFrameNum() * 0.01), 
+		ofNoise(noise_seed.y, radius * 0.005 + ofGetFrameNum() * 0.01));
+
+	auto angle_x = ofMap(noise_value.x, 0, 1, -PI * 0.5, PI * 0.5);
+	auto angle_y = ofMap(noise_value.y, 0, 1, -PI * 0.5, PI * 0.5);
 
 	auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
 	auto rotation_y = glm::rotate(glm::mat4(), angle_y, glm::vec3(0, 1, 0));
 
-	for (int deg = 0; deg < 360; deg += 1) {
+	int max = 10;
+	for (int deg = 0; deg < max; deg += 1) {
 
 		auto face_index = face_target.getNumVertices();
 
@@ -112,6 +112,24 @@ void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 l
 		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
 		frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 5);
 		frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 7);
+
+		if (deg == 0) {
+
+			frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 3);
+			frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 7);
+
+			frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 4);
+			frame_target.addIndex(frame_index + 3); frame_target.addIndex(frame_index + 7);
+		}
+
+		if (deg == max -1) {
+
+			frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 2);
+			frame_target.addIndex(frame_index + 5); frame_target.addIndex(frame_index + 6);
+
+			frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 5);
+			frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 6);
+		}
 
 		for (int i = 0; i < 8; i++) {
 
