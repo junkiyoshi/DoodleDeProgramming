@@ -20,8 +20,5 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float width, float height, glm::vec2 noise_seed, ofColor face_color, ofColor frame_color);
-
 	ofEasyCam cam;
-	ofMesh face, frame;
 };
