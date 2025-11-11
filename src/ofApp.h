@@ -23,4 +23,6 @@ public:
 
 	ofEasyCam cam;
 	ofMesh face, frame;
+
+	float noise_step;
 };

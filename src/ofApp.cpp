@@ -6,8 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
+
+	this->noise_step = ofRandom(1000);
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
@@ -15,19 +17,28 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	if (ofGetFrameNum() % 50 < 35) {
+
+		this->noise_step += ofMap(ofGetFrameNum() % 50, 0, 35, 0.01, 0.25);
+	}
+	else {
+
+		this->noise_step += 0.01;
+	}
+
 	this->face.clear();
 	this->frame.clear();
 
-	int span = 10;
-	int len = 300;
+	int span = 30;
+	int len = 600;
 	for (int x = len * -0.5; x <= len * 0.5; x += span) {
 
 		for (int y = len * -2; y <= len * 0; y += span) {
 
 			for (int z = len * -0.5; z <= len * 0.5; z += span) {
 
-				auto noise_value = ofNoise(x * 0.01, z * 0.01, y * 0.01 + ofGetFrameNum() * 0.08);
-				auto length = glm::length(glm::vec3(x, y, z));
+				auto noise_value = ofNoise(x * 0.01, z * 0.01, y * 0.0025 + this->noise_step);
+				auto length = glm::length(glm::vec3(x, 0, z));
 
 				if (y > len * 0.35) {
 
@@ -41,7 +52,7 @@ void ofApp::update() {
 				if (noise_value > 0.35) {
 
 					auto size = y > len * -1 ? span : ofMap(y, len * -2, len * -1, 0, span);
-					this->setBoxToMesh(this->face, this->frame, glm::vec3(x, y, z), size, ofColor(255), ofColor(0));
+					this->setBoxToMesh(this->face, this->frame, glm::vec3(x, y, z), size, ofColor(255, 0, 0), ofColor(239));
 				}
 			}
 		}
@@ -52,7 +63,8 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(270);
+	ofRotateX(180);
+	ofRotateY(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
 	this->frame.drawWireframe();
@@ -61,7 +73,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 250;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
