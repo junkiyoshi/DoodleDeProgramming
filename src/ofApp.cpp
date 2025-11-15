@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -18,12 +18,12 @@ void ofApp::update() {
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 2.5;
-	float theta_deg_step = 2.5;
+	float phi_deg_step = 0.5;
+	float theta_deg_step = 0.5;
 
 	float noise_scale = 2;
-	float noise_threshold_start = 0.35;
-	float noise_threshold_end = 0.65;
+	float noise_threshold_start = 0.45;
+	float noise_threshold_end = 0.55;
 
 	ofColor line_color = ofColor(255);
 	ofColor face_color = ofColor(0);
@@ -37,31 +37,31 @@ void ofApp::update() {
 				auto noise_value = ofNoise(
 					noise_scale * cos(phi_deg * DEG_TO_RAD),
 					noise_scale * sin(phi_deg * DEG_TO_RAD),
-					noise_scale * cos(theta_deg * DEG_TO_RAD) +
-					radius * 0.001 + ofGetFrameNum() * 0.015);
+					noise_scale * cos(theta_deg * DEG_TO_RAD),
+					radius * 0.01 + ofGetFrameNum() * 0.05);
 
-				if (noise_threshold_start < noise_value && noise_value < noise_threshold_end) { continue; }
+				if (noise_threshold_start > noise_value || noise_value > noise_threshold_end) { continue; }
 
 				auto noise_value_1 = ofNoise(
 					noise_scale * cos(phi_deg * DEG_TO_RAD),
 					noise_scale * sin(phi_deg * DEG_TO_RAD),
-					noise_scale * cos((theta_deg - theta_deg_step) * DEG_TO_RAD) +
-					radius * 0.001 + ofGetFrameNum() * 0.015);
+					noise_scale * cos((theta_deg - theta_deg_step) * DEG_TO_RAD),
+					radius * 0.01 + ofGetFrameNum() * 0.05);
 				auto noise_value_2 = ofNoise(
 					noise_scale * cos((phi_deg + phi_deg_step) * DEG_TO_RAD),
 					noise_scale * sin((phi_deg + phi_deg_step) * DEG_TO_RAD),
-					noise_scale * cos(theta_deg * DEG_TO_RAD) +
-					radius * 0.001 + ofGetFrameNum() * 0.015);
+					noise_scale * cos(theta_deg * DEG_TO_RAD),
+					radius * 0.01 + ofGetFrameNum() * 0.05);
 				auto noise_value_3 = ofNoise(
 					noise_scale * cos((phi_deg - phi_deg_step) * DEG_TO_RAD),
 					noise_scale * sin((phi_deg - phi_deg_step) * DEG_TO_RAD),
-					noise_scale * cos(theta_deg * DEG_TO_RAD) +
-					radius * 0.001 + ofGetFrameNum() * 0.015);
+					noise_scale * cos(theta_deg * DEG_TO_RAD),
+					radius * 0.01 + ofGetFrameNum() * 0.05);
 				auto noise_value_4 = ofNoise(
 					noise_scale * cos(phi_deg * DEG_TO_RAD),
 					noise_scale * sin(phi_deg * DEG_TO_RAD),
-					noise_scale * cos((theta_deg + theta_deg_step) * DEG_TO_RAD) +
-					radius * 0.001 + ofGetFrameNum() * 0.015);
+					noise_scale * cos((theta_deg + theta_deg_step) * DEG_TO_RAD),
+					radius * 0.01 + ofGetFrameNum() * 0.05);
 
 				auto index = this->face.getNumVertices();
 				vector<glm::vec3> vertices;
@@ -88,28 +88,28 @@ void ofApp::update() {
 				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
 				this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
 
-				if (noise_threshold_start < noise_value_1 && noise_value_1 < noise_threshold_end) {
+				if (noise_threshold_start > noise_value_1 || noise_value_1 > noise_threshold_end) {
 
 					this->line.addVertex(vertices[0]); this->line.addVertex(vertices[1]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
 					this->line.addColor(line_color); this->line.addColor(line_color);
 				}
 
-				if (noise_threshold_start < noise_value_2 && noise_value_2 < noise_threshold_end) {
+				if (noise_threshold_start > noise_value_2 || noise_value_2 > noise_threshold_end) {
 
 					this->line.addVertex(vertices[0]); this->line.addVertex(vertices[2]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
 					this->line.addColor(line_color); this->line.addColor(line_color);
 				}
 
-				if (noise_threshold_start < noise_value_3 && noise_value_3 < noise_threshold_end) {
+				if (noise_threshold_start > noise_value_3 || noise_value_3 > noise_threshold_end) {
 
 					this->line.addVertex(vertices[1]); this->line.addVertex(vertices[3]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
 					this->line.addColor(line_color); this->line.addColor(line_color);
 				}
 
-				if (noise_threshold_start < noise_value_4 && noise_value_4 < noise_threshold_end) {
+				if (noise_threshold_start > noise_value_4 || noise_value_4 > noise_threshold_end) {
 
 					this->line.addVertex(vertices[2]); this->line.addVertex(vertices[3]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
@@ -130,7 +130,6 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(270);
-	ofRotateZ(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
 	this->line.draw();
