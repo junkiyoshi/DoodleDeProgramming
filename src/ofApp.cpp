@@ -6,14 +6,14 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(0.5);
 	ofEnableDepthTest();
 
-	auto ico_sphere = ofIcoSpherePrimitive(250, 4);
+	auto ico_sphere = ofIcoSpherePrimitive(250, 3);
 	this->triangle_list.insert(this->triangle_list.end(), ico_sphere.getMesh().getUniqueFaces().begin(), ico_sphere.getMesh().getUniqueFaces().end());
 
-	this->frame.setMode(OF_PRIMITIVE_LINES);
+	//this->frame.setMode(OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
@@ -30,20 +30,20 @@ void ofApp::update() {
 
 		glm::vec3 avg = (this->triangle_list[i].getVertex(0) + this->triangle_list[i].getVertex(1) + this->triangle_list[i].getVertex(2)) / 3;
 		avg = glm::normalize(avg) * radius;
-		auto noise_value = ofNoise(avg.x * 0.006, avg.y * 0.006, avg.z * 0.006, ofGetFrameNum() * 0.002);
+		auto noise_value = ofNoise(avg.x * 0.006, avg.y * 0.006, avg.z * 0.006, ofGetFrameNum() * 0.005);
 		auto height = 0;
 
-		if (noise_value > 0.47 && noise_value < 0.53) {
+		if (noise_value > 0.48 && noise_value < 0.52) {
 
-			height = 550;
+			height = 400;
 		}
-		else  if (noise_value > 0.45 && noise_value < 0.47) {
+		else  if (noise_value > 0.45 && noise_value < 0.48) {
 
-			height = ofMap(noise_value, 0.45, 0.47, 0, 550);
+			height = ofMap(noise_value, 0.45, 0.48, 0, 400);
 		}
-		else if (noise_value > 0.53 && noise_value < 0.55) {
+		else if (noise_value > 0.52 && noise_value < 0.55) {
 
-			height = ofMap(noise_value, 0.53, 0.55, 550, 0);
+			height = ofMap(noise_value, 0.52, 0.55, 400, 0);
 		}
 
 		vector<glm::vec3> vertices;
@@ -52,13 +52,11 @@ void ofApp::update() {
 		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * radius - avg);
 		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * radius - avg);
 
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(0)) * (radius + height) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * (radius + height) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * (radius + height) - avg);
+		vertices.push_back(glm::normalize(avg) * (radius + height) - avg);
 
 		for (auto& vertex : vertices) {
 
-			vertex *= 0.8;
+			vertex *= 0.9;
 			vertex += avg;
 		}
 
@@ -74,29 +72,19 @@ void ofApp::update() {
 			this->frame.addColor(frame_color);
 		}
 
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 3);
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 4, this->mesh.getNumVertices() - 5, this->mesh.getNumVertices() - 6);
+		this->mesh.addTriangle(this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 3, this->mesh.getNumVertices() - 4);
+		this->frame.addTriangle(this->frame.getNumVertices() - 2, this->frame.getNumVertices() - 3, this->frame.getNumVertices() - 4);
 
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 5);
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 5, this->mesh.getNumVertices() - 4);
+		if (height > 250) {
 
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 3, this->mesh.getNumVertices() - 6);
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 6, this->mesh.getNumVertices() - 4);
+			this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 3);
+			this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 3, this->mesh.getNumVertices() - 4);
+			this->mesh.addTriangle(this->mesh.getNumVertices() - 1, this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 4);
 
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 3, this->mesh.getNumVertices() - 6);
-		this->mesh.addTriangle(this->mesh.getNumVertices() - 2, this->mesh.getNumVertices() - 6, this->mesh.getNumVertices() - 5);
-
-		this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 2);
-		this->frame.addIndex(this->frame.getNumVertices() - 2); this->frame.addIndex(this->frame.getNumVertices() - 3);
-		this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 3);
-
-		this->frame.addIndex(this->frame.getNumVertices() - 4); this->frame.addIndex(this->frame.getNumVertices() - 5);
-		this->frame.addIndex(this->frame.getNumVertices() - 5); this->frame.addIndex(this->frame.getNumVertices() - 6);
-		this->frame.addIndex(this->frame.getNumVertices() - 4); this->frame.addIndex(this->frame.getNumVertices() - 6);
-
-		this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 4);
-		this->frame.addIndex(this->frame.getNumVertices() - 2); this->frame.addIndex(this->frame.getNumVertices() - 5);
-		this->frame.addIndex(this->frame.getNumVertices() - 3); this->frame.addIndex(this->frame.getNumVertices() - 6);
+			this->frame.addTriangle(this->frame.getNumVertices() - 1, this->frame.getNumVertices() - 2, this->frame.getNumVertices() - 3);
+			this->frame.addTriangle(this->frame.getNumVertices() - 1, this->frame.getNumVertices() - 3, this->frame.getNumVertices() - 4);
+			this->frame.addTriangle(this->frame.getNumVertices() - 1, this->frame.getNumVertices() - 2, this->frame.getNumVertices() - 4);
+		}
 	}
 }
 
