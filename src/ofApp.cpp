@@ -6,12 +6,12 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(0.5);
 	ofEnableDepthTest();
 
 	this->base_radius = 65;
-	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 2);
+	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 1);
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	this->noise_param = ofRandom(1000);
@@ -44,11 +44,11 @@ void ofApp::update() {
 
 			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 0.15);
 
-			auto angle_x = ofMap(ofNoise(noise_seed_x, radius * 0.02 + this->noise_param), 0, 1, -param, param);
+			auto angle_x = ofMap(ofNoise(noise_seed_x, radius * 0.001 + this->noise_param), 0, 1, -param, param);
 			auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
-			auto angle_y = ofMap(ofNoise(noise_seed_y, radius * 0.02 + this->noise_param), 0, 1, -param, param);
+			auto angle_y = ofMap(ofNoise(noise_seed_y, radius * 0.001 + this->noise_param), 0, 1, -param, param);
 			auto rotation_y = glm::rotate(glm::mat4(), angle_y, glm::vec3(0, 1, 0));
-			auto angle_z = ofMap(ofNoise(noise_seed_z, radius * 0.02 + this->noise_param), 0, 1, -param, param);
+			auto angle_z = ofMap(ofNoise(noise_seed_z, radius * 0.001 + this->noise_param), 0, 1, -param, param);
 			auto rotation_z = glm::rotate(glm::mat4(), angle_z, glm::vec3(0, 0, 1));
 
 			glm::vec3 avg = (triangle.getVertex(0) + triangle.getVertex(1) + triangle.getVertex(2)) / 3;
@@ -64,8 +64,8 @@ void ofApp::update() {
 
 			for (int i = 0; i < vertices.size(); i++) {
 
-				this->face.addColor(ofColor(39, 200, 39));
-				this->frame.addColor(ofColor(239));
+				this->face.addColor(ofColor(39));
+				this->frame.addColor(ofColor(239, 39, 39));
 			}
 
 			if (radius == radius_start || radius == radius_end) {
@@ -95,13 +95,14 @@ void ofApp::update() {
 		}
 	}
 
-	this->noise_param -= 0.03;
+	this->noise_param -= 0.003;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
+	ofRotateY(ofGetFrameNum() * 0.36);
 
 	this->frame.drawWireframe();
 	this->face.draw();
@@ -110,7 +111,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 50;
+	int start = 150;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
