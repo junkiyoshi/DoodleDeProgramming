@@ -6,12 +6,13 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(0.5);
 	ofEnableDepthTest();
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 
 	this->base_radius = 65;
-	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 2);
+	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 3);
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	this->noise_param = ofRandom(1000);
@@ -26,15 +27,15 @@ void ofApp::update() {
 	this->frame.clear();
 
 	int radius_start = this->base_radius;
-	int radius_max = this->base_radius * 24;
+	int radius_max = this->base_radius * 10;
 	for (auto& triangle : this->ico_sphere.getMesh().getUniqueFaces()) {
 
 		auto noise_seed_x = ofRandom(1000);
 		auto noise_seed_y = ofRandom(1000);
 		auto noise_seed_z = ofRandom(1000);
 
-		auto noise_value = ofNoise(glm::vec4(triangle.getVertex(0) * 2, this->noise_param * 10));
-		int radius_end = noise_value < 0.6 ? radius_start : ofMap(noise_value, 0.6, 1, radius_start, radius_max);
+		auto noise_value = ofNoise(ofRandom(1000), this->noise_param);
+		int radius_end = noise_value < 0.4 ? radius_start : ofMap(noise_value, 0.4, 1, radius_start, radius_max);
 		this->frame.addVertex(glm::vec3());
 
 		for (int radius = radius_start; radius <= radius_end; radius += 1) {
@@ -55,17 +56,23 @@ void ofApp::update() {
 			glm::vec3 location = glm::normalize(avg) * radius;
 
 			vector<glm::vec3> vertices;
+
 			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(0) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(0) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
 			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(1) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(1) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
 			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(2) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(2) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
+
+			for (auto& v : vertices) {
+
+				v.z *= 0.05;
+			}
 
 			this->face.addVertices(vertices);
 			this->frame.addVertices(vertices);
 
 			for (int i = 0; i < vertices.size(); i++) {
 
-				this->face.addColor(ofColor(39));
-				this->frame.addColor(ofColor(39, 239, 39));
+				this->face.addColor(ofColor(139, 239, 239, 64));
+				this->frame.addColor(ofColor(139, 239, 239));
 			}
 
 			if (radius == radius_start || radius == radius_end) {
@@ -102,7 +109,6 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 0.36);
 
 	this->frame.drawWireframe();
 	this->face.draw();
