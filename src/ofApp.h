@@ -1,6 +1,5 @@
 #pragma once
 #include "ofMain.h"
-
 class ofApp : public ofBaseApp {
 
 public:
@@ -18,9 +17,8 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
+	glm::vec2 make_point(float theta);
+
 	ofEasyCam cam;
-	float base_radius;
-	ofIcoSpherePrimitive ico_sphere;
 	ofMesh face, frame;
-	float noise_param;
 };
