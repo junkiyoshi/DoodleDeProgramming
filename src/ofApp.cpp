@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(255);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -26,36 +26,21 @@ void ofApp::update() {
 		for (int deg = 0; deg < 360; deg += 1) {
 
 			vector<glm::vec3> vertices;
+		
+			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, -10));
+			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), -10));
+			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), -10));
+			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, -10));
 
-			if (scale == 3) {
-
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * 0, -2.5));
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), -2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), -2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * 0, -2.5));
-
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * 0, 2.5));
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), 2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), 2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * 0, 2.5));
-			}
-			else {
-			
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, -2.5));
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), -2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), -2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, -2.5));
-
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, 2.5));
-				vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), 2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), 2.5));
-				vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, 2.5));
-			}
+			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, 10));
+			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), 10));
+			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), 10));
+			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, 10));
 
 			for (auto& vertex : vertices) {
 
-				auto angle = scale == 3 ? 0 : ofMap(ofNoise(scale * 0.025, vertex.y * 0.0003 + ofGetFrameNum() * 0.01), 0, 1, -PI * 2, PI * 2);
-				auto rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
+				auto angle = ofMap(ofNoise(scale * 0.06 - ofGetFrameNum() * 0.03), 0, 1, -PI * 0.5, PI * 0.5);
+				auto rotation = glm::rotate(glm::mat4(), angle, glm::vec3(1, 0, 0));
 				vertex = glm::vec4(vertex, 0) * rotation;
 			}
 
@@ -106,7 +91,7 @@ void ofApp::draw() {
 	ofSetColor(0);
 	this->face.draw();
 
-	ofSetColor(239, 39, 239);
+	ofSetColor(239, 39, 39);
 	this->frame.drawWireframe();
 
 	this->cam.end();
