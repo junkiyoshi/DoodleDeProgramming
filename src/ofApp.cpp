@@ -1,15 +1,17 @@
-#include "ofApp.h"	
+#include "ofApp.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
 
-	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
+	ofSetFrameRate(25);
 
-	ofBackground(39);
+	ofBackground(239);
+	ofSetColor(39);
+	ofSetLineWidth(1.5);
 	ofEnableDepthTest();
 
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	this->noise_step = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
@@ -17,82 +19,74 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	this->face.clear();
-	this->frame.clear();
-
-	for (float scale = 3; scale < 20; scale += 1) {
-
-		auto start_index = this->face.getNumVertices();
-		for (int deg = 0; deg < 360; deg += 1) {
-
-			vector<glm::vec3> vertices;
-		
-			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, -10));
-			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), -10));
-			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), -10));
-			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, -10));
-
-			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * scale, 10));
-			vertices.push_back(glm::vec3(this->make_point(deg * DEG_TO_RAD) * (scale + 0.25), 10));
-			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * (scale + 0.25), 10));
-			vertices.push_back(glm::vec3(this->make_point((deg + 1) * DEG_TO_RAD) * scale, 10));
-
-			for (auto& vertex : vertices) {
-
-				auto angle = ofMap(ofNoise(scale * 0.06 - ofGetFrameNum() * 0.03), 0, 1, -PI * 0.5, PI * 0.5);
-				auto rotation = glm::rotate(glm::mat4(), angle, glm::vec3(1, 0, 0));
-				vertex = glm::vec4(vertex, 0) * rotation;
-			}
-
-			auto index = this->face.getNumVertices();
-			this->face.addVertices(vertices);
-			this->frame.addVertices(vertices);
-
-			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 2);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
-			this->face.addIndex(index + 4); this->face.addIndex(index + 5); this->face.addIndex(index + 6);
-			this->face.addIndex(index + 4); this->face.addIndex(index + 6); this->face.addIndex(index + 7);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 4); this->face.addIndex(index + 1);
-			this->face.addIndex(index + 4); this->face.addIndex(index + 5); this->face.addIndex(index + 1);
-			this->face.addIndex(index + 1); this->face.addIndex(index + 5); this->face.addIndex(index + 6);
-			this->face.addIndex(index + 6); this->face.addIndex(index + 2); this->face.addIndex(index + 1);
-			this->face.addIndex(index + 2); this->face.addIndex(index + 6); this->face.addIndex(index + 7);
-			this->face.addIndex(index + 7); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
-			this->face.addIndex(index + 3); this->face.addIndex(index + 7); this->face.addIndex(index + 4);
-			this->face.addIndex(index + 4); this->face.addIndex(index + 0); this->face.addIndex(index + 3);
-
-			this->frame.addIndex(index + 0); this->frame.addIndex(index + 3);
-			this->frame.addIndex(index + 1); this->frame.addIndex(index + 2);
-			this->frame.addIndex(index + 4); this->frame.addIndex(index + 7);
-			this->frame.addIndex(index + 5); this->frame.addIndex(index + 6);
-		}
-
-		if (this->face.getNumVertices() != start_index) {
-
-			this->frame.addIndex(start_index + 0); this->frame.addIndex(start_index + 4);
-			this->frame.addIndex(start_index + 0); this->frame.addIndex(start_index + 1);
-			this->frame.addIndex(start_index + 5); this->frame.addIndex(start_index + 1);
-			this->frame.addIndex(start_index + 5); this->frame.addIndex(start_index + 4);
-
-			this->frame.addIndex(this->face.getNumVertices() - 1); this->frame.addIndex(this->face.getNumVertices() - 2);
-			this->frame.addIndex(this->face.getNumVertices() - 1); this->frame.addIndex(this->face.getNumVertices() - 5);
-			this->frame.addIndex(this->face.getNumVertices() - 6); this->frame.addIndex(this->face.getNumVertices() - 2);
-			this->frame.addIndex(this->face.getNumVertices() - 6); this->frame.addIndex(this->face.getNumVertices() - 5);
-		}
-	}
+	this->noise_step -= 0.005;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(180);
-	
-	ofSetColor(0);
-	this->face.draw();
 
-	ofSetColor(239, 39, 39);
-	this->frame.drawWireframe();
+	ofColor color;
+	auto noise_seed = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
+	int size_span = 120;
+	vector<glm::vec3> vertices, before_verices;
+	for (int size = 30; size < 330; size += size_span) {
+
+		auto x_value = ofNoise(noise_seed.x, size * 0.00015 + this->noise_step);
+		auto y_value = ofNoise(noise_seed.y, size * 0.00015 + this->noise_step);
+		auto z_value = ofNoise(noise_seed.z, size * 0.00015 + this->noise_step);
+
+		auto x_deg = x_value < 0.45 ? ofMap(x_value, 0, 0.45, -270, 0) : x_value > 0.55 ? ofMap(x_value, 0.55, 1, 0, 270) : 0;
+		auto y_deg = y_value < 0.45 ? ofMap(y_value, 0, 0.45, -270, 0) : y_value > 0.55 ? ofMap(y_value, 0.55, 1, 0, 270) : 0;
+		auto z_deg = z_value < 0.45 ? ofMap(z_value, 0, 0.45, -270, 0) : z_value > 0.55 ? ofMap(z_value, 0.55, 1, 0, 270) : 0;
+
+		auto rotation_x = glm::rotate(glm::mat4(), (float)(x_deg * DEG_TO_RAD), glm::vec3(1, 0, 0));
+		auto rotation_y = glm::rotate(glm::mat4(), (float)(y_deg * DEG_TO_RAD), glm::vec3(0, 1, 0));
+		auto rotation_z = glm::rotate(glm::mat4(), (float)(z_deg * DEG_TO_RAD), glm::vec3(0, 0, 1));
+
+		vertices.clear();
+
+		vertices.push_back(glm::vec3(size * 0.5, size * 0.5, size * 0.5));
+		vertices.push_back(glm::vec3(size * 0.5, -size * 0.5, size * 0.5));
+		vertices.push_back(glm::vec3(-size * 0.5, size * 0.5, size * 0.5));
+		vertices.push_back(glm::vec3(-size * 0.5, -size * 0.5, size * 0.5));
+
+		vertices.push_back(glm::vec3(size * 0.5, size * 0.5, -size * 0.5));
+		vertices.push_back(glm::vec3(size * 0.5, -size * 0.5, -size * 0.5));
+		vertices.push_back(glm::vec3(-size * 0.5, size * 0.5, -size * 0.5));
+		vertices.push_back(glm::vec3(-size * 0.5, -size * 0.5, -size * 0.5));
+
+		ofFill();
+		for (auto& vertex : vertices) {
+
+			vertex = glm::vec4(vertex, 0) * rotation_z * rotation_y * rotation_x;
+
+			ofDrawSphere(vertex, 5);
+		}
+
+		ofNoFill();
+		for (int i = 0; i < 8; i++) {
+
+			if (before_verices.size() <= 0) {
+
+				break;
+			}
+
+			ofDrawLine(vertices[i], before_verices[i]);
+		}
+
+		before_verices = vertices;
+
+		ofPushMatrix();
+		ofRotateX(-x_deg);
+		ofRotateY(-y_deg);
+		ofRotateZ(-z_deg);
+
+		ofDrawBox(size);
+
+		ofPopMatrix();
+	}
 
 	this->cam.end();
 
@@ -112,15 +106,6 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
-
-//--------------------------------------------------------------
-// Reference by https://twitter.com/shiffman/status/1095764239665512453
-glm::vec2 ofApp::make_point(float theta) {
-
-	float x = 16 * (pow(sin(theta), 3));
-	float y = 13 * cos(theta) - 5 * cos(2 * theta) - 2 * cos(3 * theta) - cos(4 * theta);
-	return glm::vec2(x, -y);
 }
 
 //--------------------------------------------------------------
