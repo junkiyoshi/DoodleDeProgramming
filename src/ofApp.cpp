@@ -75,7 +75,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
 
 	auto span = 30;
@@ -106,7 +106,7 @@ void ofApp::setup() {
 		this->next_index_list.push_back(next_index);
 	}
 
-	for (int i = 0; i < 150; i++) {
+	for (int i = 0; i < 80; i++) {
 
 		this->actor_list.push_back(make_unique<Actor>(this->location_list, this->next_index_list, this->destination_list));
 	}
@@ -115,10 +115,8 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	int frame_span = 25;
+	int frame_span = 10;
 	int prev_index_size = 0;
-
-	if (ofGetFrameNum() % 50 > 25) { return; }
 
 	if (ofGetFrameNum() % frame_span == 0) {
 
@@ -141,27 +139,21 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
 
-	ofSetColor(0);
+	ofColor color;
+	color.setHsb(ofMap(ofGetFrameNum() % 500, 0, 500, 0, 255), 200, 255);
+	ofSetColor(color);
+
 	for (auto& actor : this->actor_list) {
 
 		for (auto& l : actor->getLog()) {
 
-			ofDrawRectangle(l, 20, 20);
-		}
-	}
-
-	ofSetColor(255);
-	for (auto& actor : this->actor_list) {
-
-		for (auto& l : actor->getLog()) {
-			
-			ofDrawRectangle(l, 17, 17);
+			ofDrawRectangle(l, 5, 5);
 		}
 	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 250;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
