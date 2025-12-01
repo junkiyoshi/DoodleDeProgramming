@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetCircleResolution(60);
 	ofSetLineWidth(2);
 }
@@ -21,46 +21,43 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	int deg_span = 40;
+	int deg_span = 45;
 	int radius_span = 1;
-	int deg_len = 3;
+	int deg_len = 1;
 
-	ofFill();
-	ofSetColor(239, 39, 39);
-	ofDrawCircle(glm::vec2(), 320 + radius_span);
+	for (int deg_len = 2; deg_len > 0; deg_len -= 1) {
 
-	ofSetColor(0);
-	ofFill();
+		deg_len == 2 ? ofSetColor(239) : ofSetColor(39);
 
-	for (int deg = 0; deg < 360; deg += deg_span) {
+		for (int deg = 0; deg < 360; deg += deg_span) {
 
-		for (int radius = 5; radius < 320; radius += radius_span) {
+			for (int radius = 5; radius < 320; radius += radius_span) {
 
-			ofSetColor(radius < 50 ? 0 : ofMap(radius, 50, 320, 0, 239));
+				auto noise_deg = ofGetFrameNum() * 1.44 + ofMap(ofNoise(radius * 0.0015), 0, 1, 180, -180);
+				auto next_noise_deg = ofGetFrameNum() * 1.44 + ofMap(ofNoise((radius + radius_span) * 0.0015), 0, 1, 180, -180);
 
-			auto noise_deg = ofGetFrameNum() * 2 + ofMap(ofNoise(radius * 0.0023 - ofGetFrameNum() * 0.0001), 0, 1, 180, -180);
-			auto next_noise_deg = ofGetFrameNum() * 2 + ofMap(ofNoise((radius + radius_span) * 0.0023 - ofGetFrameNum() * 0.0001), 0, 1, 180, -180);
+				ofBeginShape();
+				ofVertex(glm::vec2(radius * cos((deg + noise_deg - deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg - deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2(radius * cos((deg + noise_deg + deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg + deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg + deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg + deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg - deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg - deg_len) * DEG_TO_RAD)));
+				ofEndShape(true);
 
-			ofBeginShape();
-			ofVertex(glm::vec2(radius * cos((deg + noise_deg - deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg - deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2(radius * cos((deg + noise_deg + deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg + deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg + deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg + deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg - deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg - deg_len) * DEG_TO_RAD)));
-			ofEndShape(true);
+				noise_deg = ofMap(ofNoise(radius * 0.0015), 0, 1, -180, 180) - ofGetFrameNum() * 1.44;
+				next_noise_deg = ofMap(ofNoise((radius + radius_span) * 0.0015), 0, 1, -180, 180) - ofGetFrameNum() * 1.44;
 
-			noise_deg = ofMap(ofNoise(radius * 0.0023 - ofGetFrameNum() * 0.0001), 0, 1, -180, 180) - ofGetFrameNum() * 2;
-			next_noise_deg = ofMap(ofNoise((radius + radius_span) * 0.0023 - ofGetFrameNum() * 0.0001), 0, 1, -180, 180) - ofGetFrameNum() * 2;
-
-			ofBeginShape();
-			ofVertex(glm::vec2(radius * cos((deg + noise_deg - deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg - deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2(radius * cos((deg + noise_deg + deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg + deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg + deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg + deg_len) * DEG_TO_RAD)));
-			ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg - deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg - deg_len) * DEG_TO_RAD)));
-			ofEndShape(true);
+				ofBeginShape();
+				ofVertex(glm::vec2(radius * cos((deg + noise_deg - deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg - deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2(radius * cos((deg + noise_deg + deg_len) * DEG_TO_RAD), radius * sin((deg + noise_deg + deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg + deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg + deg_len) * DEG_TO_RAD)));
+				ofVertex(glm::vec2((radius + radius_span) * cos((deg + next_noise_deg - deg_len) * DEG_TO_RAD), (radius + radius_span) * sin((deg + next_noise_deg - deg_len) * DEG_TO_RAD)));
+				ofEndShape(true);
+			}
 		}
 	}
 
 	ofNoFill();
+	ofSetColor(239);
 	ofDrawCircle(glm::vec2(), 320 + radius_span);
 
 	/*
