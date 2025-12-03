@@ -6,16 +6,16 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	int span = 15;
+	int span = 10;
 	for (int x = -120; x <= 120; x += span) {
 
-		for (int y = -450; y <= 450; y += span) {
+		for (int y = -120; y <= 120; y += span) {
 
 			for (int z = -120; z <= 120; z += span) {
 
@@ -33,7 +33,7 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	float size = 15;
+	float size = 10;
 	for (int i = 0; i < this->location_list.size(); i++) {
 
 		this->setBoxToMesh(this->face, this->frame, this->location_list[i], size);
@@ -51,7 +51,6 @@ void ofApp::draw() {
 
 	this->cam.end();
 
-	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 250;
 	if (ofGetFrameNum() > start) {
@@ -66,7 +65,6 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
-	*/
 }
 
 //--------------------------------------------------------------
@@ -78,7 +76,7 @@ void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 lo
 //--------------------------------------------------------------
 void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float height, float width, float depth) {
 
-	auto noise_value = ofNoise(glm::vec4(location * 0.005, ofGetFrameNum() * 0.01));
+	auto noise_value = ofNoise(glm::vec4(location.x * 0.01, location.z * 0.01, location.y * 0.01 + ofGetFrameNum() * 0.02, ofGetFrameNum() * 0.02));
 
 	if (noise_value < 0.45) { return; }
 	else if (noise_value < 0.5) { noise_value = ofMap(noise_value, 0.45, 0.5, 0, 1); }
@@ -100,8 +98,8 @@ void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 lo
 
 	for (auto& vertex : vertices) {
 
-		face_target.addVertex(location + vertex * 0.99);
-		frame_target.addVertex(location + vertex);
+		face_target.addVertex(location + vertex * 0.99 * noise_value);
+		frame_target.addVertex(location + vertex * noise_value);
 	}
 
 	face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 2);
@@ -137,8 +135,8 @@ void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 lo
 	frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 6);
 	frame_target.addIndex(frame_index + 3); frame_target.addIndex(frame_index + 7);
 
-	ofColor face_color = noise_value < 1 ? ofColor(239, 39, 39) : ofColor(239);
-	ofColor frame_color = noise_value < 1 ? ofColor(239) : ofColor(239, 39, 39);
+	ofColor face_color = noise_value < 1 ? ofColor(239, 39, 39) : ofColor(39);
+	ofColor frame_color = noise_value < 1 ? ofColor(39) : ofColor(239, 39, 39);
 	for (int i = 0; i < 8; i++) {
 
 		face_target.addColor(face_color);
