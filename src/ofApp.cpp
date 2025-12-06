@@ -6,14 +6,19 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofNoFill();
+	ofBackground(239);
 	ofSetLineWidth(2);
+
+	this->noise_param = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	if (ofGetFrameNum() % 50 < 40) {
+
+		this->noise_param += ofMap(ofGetFrameNum() % 50, 0, 40, 0.5, 0);
+	}
 }
 
 //--------------------------------------------------------------
@@ -22,7 +27,7 @@ void ofApp::draw() {
 	ofTranslate(ofGetWindowSize() * 0.5);
 
 	ofSeedRandom(39);
-	ofSetColor(239);
+	ofSetColor(39);
 	for (int deg = 0; deg < 360; deg += 15) {
 
 		ofPushMatrix();
@@ -42,7 +47,7 @@ void ofApp::draw() {
 			auto gap = abs(len * 0.5 - d);
 			auto power = gap < len * 0.2 ? 1 : ofMap(gap, len * 0.2, len * 0.5, 1, 0);
 
-			auto noise_x = ofMap(ofNoise(noise_seed, location.x * 0.05, (((int)location.y / 15) * 15) * 0.02 + ofGetFrameNum() * 0.04), 0, 1, -25, 25);
+			auto noise_x = ofMap(ofNoise(noise_seed, location.x * 0.05, (((int)location.y / 15) * 15) * 0.02 + this->noise_param), 0, 1, -20, 20);
 			location += glm::vec2(noise_x * power, 0);
 
 			ofVertex(location);
