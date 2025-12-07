@@ -6,8 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
-	ofSetLineWidth(2);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 
 	this->noise_param = ofRandom(1000);
 }
@@ -15,10 +15,7 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	if (ofGetFrameNum() % 50 < 40) {
-
-		this->noise_param += ofMap(ofGetFrameNum() % 50, 0, 40, 0.5, 0);
-	}
+	this->noise_param += 0.08;
 }
 
 //--------------------------------------------------------------
@@ -26,35 +23,42 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	ofSeedRandom(39);
-	ofSetColor(39);
-	for (int deg = 0; deg < 360; deg += 15) {
+	ofColor color;
+	for (int i = 0; i < 3; i++) {
 
-		ofPushMatrix();
-		ofRotate(deg);
+		color.setHsb(ofMap(i, 0, 3, 0, 255), 100, 255);
+		ofSetColor(color);
 
-		auto base_location = glm::vec2(0, -50);
-		auto target_location = glm::vec2(0, -350);
-		auto distance = target_location - base_location;
-		auto len = glm::length(distance);
-		auto noise_seed = ofRandom(1000);
+		ofSeedRandom(1000);
 
-		ofBeginShape();
-		for (int d = 0; d <= len; d += 1) {
+		for (int deg = 0; deg < 360; deg += 90) {
 
-			auto location = base_location + glm::normalize(distance) * d;
+			ofPushMatrix();
+			ofRotate(deg);
 
-			auto gap = abs(len * 0.5 - d);
-			auto power = gap < len * 0.2 ? 1 : ofMap(gap, len * 0.2, len * 0.5, 1, 0);
+			auto base_location = glm::vec2(0, -50);
+			auto target_location = glm::vec2(0, -350);
+			auto distance = target_location - base_location;
+			auto len = glm::length(distance);
+			auto noise_seed = ofRandom(1000) + i * 0.15;
 
-			auto noise_x = ofMap(ofNoise(noise_seed, location.x * 0.05, (((int)location.y / 15) * 15) * 0.02 + this->noise_param), 0, 1, -20, 20);
-			location += glm::vec2(noise_x * power, 0);
+			ofBeginShape();
+			for (int d = 0; d <= len; d += 1) {
 
-			ofVertex(location);
+				auto location = base_location + glm::normalize(distance) * d;
+
+				auto gap = abs(len * 0.5 - d);
+				auto power = gap < len * 0.2 ? 1 : ofMap(gap, len * 0.2, len * 0.5, 1, 0);
+
+				auto noise_x = ofMap(ofNoise(noise_seed, location.x * 0.05, (((int)location.y / 15) * 15) * 0.02 + this->noise_param), 0, 1, -200, 200);
+				location += glm::vec2(noise_x * power, 0);
+
+				ofVertex(location);
+			}
+			ofEndShape();
+
+			ofPopMatrix();
 		}
-		ofEndShape();
-
-		ofPopMatrix();
 	}
 
 	/*
