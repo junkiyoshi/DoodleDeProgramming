@@ -18,5 +18,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	float noise_param;
+	glm::vec3 make_point(float R, float r, float u, float v);
+
+	ofEasyCam cam;
 };
