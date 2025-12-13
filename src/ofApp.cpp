@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 	ofSetLineWidth(1.5);
 
@@ -21,23 +21,15 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	float phi_deg_step = 3;
+	float phi_deg_step = 1;
 	float theta_deg_step = 1;
 
-	for (int radius = 150; radius <= 350; radius += 25) {
+	for (int radius = 150; radius <= 350; radius += 50) {
 
 		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
 			float param = ofNoise(radius * 0.0025 - ofGetFrameNum() * 0.02);
-			if (param > 0.5) {
-
-				param = ofMap(param, 0.5, 1, 0, 1);
-			}
-			else {
-
-				param = 0;
-			}
-			float theta_deg_start = 90 + ofMap(ofNoise(ofRandom(39), radius * 0.0025 - ofGetFrameNum() * 0.02), 0, 1, -360, 360) * param;
+			float theta_deg_start = 90 + ofMap(ofNoise(radius * cos(phi_deg * DEG_TO_RAD) * 0.01, radius * sin(phi_deg * DEG_TO_RAD) * 0.01, radius * 0.0025 - ofGetFrameNum() * 0.02), 0, 1, -120, 120) * param;
 			int frame_start_index = this->face.getNumVertices();
 
 			for (float theta_deg = theta_deg_start - 10; theta_deg < theta_deg_start + 10; theta_deg += theta_deg_step) {
@@ -82,13 +74,11 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 0.72);
-	ofRotateX(270);
 
-	ofSetColor(39);
+	ofSetColor(255, 0, 0, 32);
 	this->face.draw();
 
-	ofSetColor(239);
+	ofSetColor(255, 0, 0);
 	this->frame.draw();
 
 	this->cam.end();
