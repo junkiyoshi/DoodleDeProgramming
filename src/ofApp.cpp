@@ -6,11 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
-	ofSetLineWidth(1.5);
-
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	ofBackground(239);
+	ofSetLineWidth(2);
 }
 
 //--------------------------------------------------------------
@@ -18,70 +15,35 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	this->face.clear();
-	this->frame.clear();
+	if (ofGetFrameNum() % 60 < 35) {
 
-	float phi_deg_step = 1;
-	float theta_deg_step = 1;
-
-	for (int radius = 150; radius <= 350; radius += 50) {
-
-		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
-
-			float param = ofNoise(radius * 0.0025 - ofGetFrameNum() * 0.02);
-			float theta_deg_start = 90 + ofMap(ofNoise(radius * cos(phi_deg * DEG_TO_RAD) * 0.01, radius * sin(phi_deg * DEG_TO_RAD) * 0.01, radius * 0.0025 - ofGetFrameNum() * 0.02), 0, 1, -120, 120) * param;
-			int frame_start_index = this->face.getNumVertices();
-
-			for (float theta_deg = theta_deg_start - 10; theta_deg < theta_deg_start + 10; theta_deg += theta_deg_step) {
-
-				auto index = this->face.getNumVertices();
-				vector<glm::vec3> vertices;
-
-				vertices.push_back(glm::vec3(
-					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
-				vertices.push_back(glm::vec3(
-					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
-				vertices.push_back(glm::vec3(
-					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
-				vertices.push_back(glm::vec3(
-					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
-					radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
-
-				this->face.addVertices(vertices);
-				this->frame.addVertices(vertices);
-
-				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
-				this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
-
-				this->frame.addIndex(index + 0); this->frame.addIndex(index + 2);
-				this->frame.addIndex(index + 1); this->frame.addIndex(index + 3);
-			}
-
-			this->frame.addIndex(frame_start_index + 0); this->frame.addIndex(frame_start_index + 1);
-			this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 2);
-		}
+		this->noise_param += ofMap(ofGetFrameNum() % 60, 0, 35, 0.05, 0);
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
+	ofTranslate(ofGetWindowSize() * 0.5);
+	ofRotateY(ofGetFrameNum() * 1.44);
 
-	ofSetColor(255, 0, 0, 32);
-	this->face.draw();
+	float radius = 200;
+	for (int deg = 0; deg < 360; deg += 5) {
 
-	ofSetColor(255, 0, 0);
-	this->frame.draw();
+		auto noise_location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+		auto noise_value = ofNoise(glm::vec3(noise_location * 0.005, this->noise_param));
+		auto noise_deg = ofMap(noise_value, 0, 1, -360, 360);
+		auto len = radius * 0.5;
 
-	this->cam.end();
+		ofPushMatrix();
+		ofRotate(deg);
+		ofTranslate(glm::vec2(radius, 0));
+		ofRotateY(noise_deg);
+
+		this->draw_arrow(glm::vec2(), glm::vec2(len, 0), 18, ofColor(0));
+
+		ofPopMatrix();
+	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -99,6 +61,38 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color) {
+
+	auto angle = std::atan2(target.y - location.y, target.x - location.x);
+	auto distance = glm::distance(target, location);
+
+	if (glm::length(distance) > size * 0.1) {
+
+		ofPushMatrix();
+		ofTranslate(target);
+
+		ofSetColor(color);
+		ofFill();
+		ofBeginShape();
+		ofVertex(glm::vec2(size * cos(angle), size * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)));
+		ofEndShape();
+
+		ofBeginShape();
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25);
+		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
+		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25);
+		ofEndShape();
+
+		ofPopMatrix();
+	}
+
+	ofDrawSphere(glm::vec3(location, 0), 5);
 }
 
 //--------------------------------------------------------------
