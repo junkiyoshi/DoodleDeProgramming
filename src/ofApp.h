@@ -20,5 +20,6 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	float noise_param;
+	ofEasyCam cam;
+	float noise_step;
 };

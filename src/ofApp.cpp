@@ -4,11 +4,15 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openFrameworks");
+	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofSetColor(239);
-	ofSetLineWidth(2);
+	ofBackground(239);
+	ofSetColor(39);
+	ofSetCircleResolution(60);
+	ofNoFill();
+	ofEnableDepthTest();
+
+	this->noise_step = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
@@ -16,59 +20,34 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	if (ofGetFrameNum() % 60 < 35) {
-
-		this->noise_param += ofMap(ofGetFrameNum() % 60, 0, 35, 0.05, 0);
-	}
+	auto param = ofGetFrameNum() % 50;
+	if (param < 20) { this->noise_step += 0; }
+	else if (param < 25) { this->noise_step += ofMap(param, 20, 25, 0, 0.015); }
+	else if (param < 45) { this->noise_step += 0.015; }
+	else { this->noise_step += ofMap(param, 45, 50, 0.015, 0); }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
-	ofRotateY(ofGetFrameNum() * 1.44);
+	this->cam.begin();
+	ofRotateY(ofGetFrameNum() * 2.88);
 
-	float radius = 180;
 	auto noise_seed = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
-	for (int deg = 0; deg < 360; deg += 5) {
-
-		auto noise_location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-		auto noise_value = ofNoise(glm::vec4(noise_seed.x, noise_location * 0.0075, this->noise_param));
-		auto noise_deg = ofMap(noise_value, 0, 1, -360, 360);
-		auto len = radius * 0.5;
+	for (int i = 0; i < 32; i++) {
 
 		ofPushMatrix();
-		ofRotate(deg);
-		ofTranslate(glm::vec2(radius, 0));
-		ofRotateY(noise_deg);
+		ofRotateZ(ofMap(ofNoise(noise_seed.z, this->noise_step + i * 0.0075), 0, 1, -360, 360));
+		ofRotateY(ofMap(ofNoise(noise_seed.y, this->noise_step + i * 0.0075), 0, 1, -360, 360));
+		ofRotateX(ofMap(ofNoise(noise_seed.x, this->noise_step + i * 0.0075), 0, 1, -360, 360));
 
-		ofDrawLine(glm::vec2(), glm::vec2(len, 0));
-		ofDrawSphere(glm::vec3(), 3);
-		
-		ofTranslate(glm::vec2(len, 0));
-
-		noise_value = ofNoise(glm::vec4(noise_seed.y, noise_location * 0.0075, this->noise_param));
-		noise_deg = ofMap(noise_value, 0, 1, -360, 360);
-
-		ofRotateY(noise_deg);
-
-		ofDrawLine(glm::vec2(), glm::vec2(len * 0.5, 0));
-		ofDrawSphere(glm::vec3(), 3);
-
-		ofTranslate(glm::vec2(len * 0.5, 0));
-
-		noise_value = ofNoise(glm::vec4(noise_seed.z, noise_location * 0.0075, this->noise_param));
-		noise_deg = ofMap(noise_value, 0, 1, -360, 360);
-
-		ofRotateY(noise_deg);
-
-		ofDrawLine(glm::vec2(), glm::vec2(len * 0.25, 0));
-		ofDrawSphere(glm::vec3(), 3);
-
-		ofDrawSphere(glm::vec3(len * 0.25, 0, 0), 3);
+		ofSetLineWidth(ofMap(i, 0, 32, 1, 5));
+		ofDrawCircle(glm::vec3(), ofMap(i, 0, 32, 150, 250));
 
 		ofPopMatrix();
 	}
+
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
