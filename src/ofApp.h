@@ -22,4 +22,5 @@ public:
 
 	ofEasyCam cam;
 	float noise_step;
+	int color_param;
 };
