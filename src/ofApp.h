@@ -14,13 +14,11 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
-	void mouseEntered(int x, int y) {};
-	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
+	glm::vec3 make_point(float R, float r, float u, float v);
+
 	ofEasyCam cam;
-	float noise_step;
-	int color_param;
 };
