@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
-	ofSetLineWidth(2);
+	ofBackground(39);
 	ofEnableDepthTest();
 }
 
@@ -20,7 +19,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(360 - 60);
+	ofRotateY(ofGetFrameNum() * 1.44);
 
 	float R = 230;
 	float r = 10;
@@ -29,13 +28,13 @@ void ofApp::draw() {
 	ofMesh face, line;
 	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	float v_span = 0.5;
+	float v_span = 2;
 	for (float v_start = 0; v_start < 360; v_start += v_span) {
 
 		int v_end = v_start + v_span;
 		float span = 0.5;
 
-		r = ofMap(ofNoise(cos(v_start * DEG_TO_RAD) * 100, sin(v_start * DEG_TO_RAD) * 100, ofGetFrameNum() * 0.02), 0, 1, R * -0.5, R * 0.5);
+		r = ofMap(ofNoise(cos(v_start * DEG_TO_RAD) * 2, sin(v_start * DEG_TO_RAD) * 2, ofGetFrameNum() * 0.02), 0, 1, R * -0.5, R * 0.5);
 
 		for (float v = v_start; v <= v_end; v += span) {
 
@@ -53,8 +52,8 @@ void ofApp::draw() {
 
 				for (int i = 0; i < 4; i++) {
 
-					face.addColor(ofColor(239));
-					line.addColor(ofColor(39));
+					face.addColor(ofColor(39));
+					line.addColor(ofColor(239));
 				}
 
 				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
@@ -80,7 +79,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 300;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
