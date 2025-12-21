@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
@@ -17,7 +18,7 @@ void ofApp::update() {
 		this->noise_value = ofRandom(1000);
 	}
 
-	for (int i = 0; i < 300; i++) {
+	for (int i = 0; i < 500; i++) {
 
 		this->location_list.push_back(glm::vec2(ofRandom(-360, 360), ofRandom(-360, 360)));
 		this->life_list.push_back(0);
@@ -34,9 +35,17 @@ void ofApp::update() {
 
 	for (int i = 0; i < this->location_list.size(); i++) {
 
-		auto deg = ofMap(ofNoise(this->location_list[i].x * 0.002, this->location_list[i].y * 0.002, this->noise_value), 0, 1, -360, 360);
+		auto deg = ofMap(ofNoise(
+			((int)this->location_list[i].x / 50 * 50) * 0.015,
+			((int)this->location_list[i].y / 50 * 50) * 0.015,
+			this->noise_value), 0, 1, (ofGetFrameNum() / 75) * 90 + 0, (ofGetFrameNum() / 75) * 90 + 180);
 		auto next = this->location_list[i] + glm::vec2(5 * cos(deg * DEG_TO_RAD), 5 * sin(deg * DEG_TO_RAD));
-		next = glm::length(next) > 280 ? glm::normalize(next) * 280 : next;
+
+		if (next.x < -300) { next.x = -300; }
+		if (next.x > 300) { next.x = 300; }
+		if (next.y < -300) { next.y = -300; }
+		if (next.y > 300) { next.y = 300; }
+
 		this->location_list[i] = next;
 		this->life_list[i] += 1;
 	}
@@ -47,23 +56,16 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	ofSetColor(0);
+	ofSetColor(39, 0, 139);
 	for (int i = 0; i < this->location_list.size(); i++) {
 
-		auto size = this->life_list[i] < 30 ? ofMap(this->life_list[i], 0, 30, 0, 4) : 4;
+		auto size = this->life_list[i] < 30 ? ofMap(this->life_list[i], 0, 30, 0, 2) : 2;
 		ofDrawCircle(this->location_list[i], size);
-	}
-
-	ofSetColor(255);
-	for (int i = 0; i < this->location_list.size(); i++) {
-
-		auto size = this->life_list[i] < 30 ? ofMap(this->life_list[i], 0, 30, 0, 4) : 4;
-		ofDrawCircle(this->location_list[i], size * 0.4);
 	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 750;
+	int start = 350;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
