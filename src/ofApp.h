@@ -1,4 +1,3 @@
-#pragma once
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp {
@@ -14,12 +13,12 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
+	void mouseEntered(int x, int y) {};
+	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	vector<glm::vec2> location_list;
-	vector<int> life_list;
-
-	float noise_value;
+	ofEasyCam cam;
+	ofMesh face, frame;
 };

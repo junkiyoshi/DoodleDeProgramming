@@ -6,62 +6,84 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
+	ofBackground(239);
+	ofSetLineWidth(2);
+	ofEnableDepthTest();
+
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	if (ofGetFrameNum() % 75 < 15) {
+	this->face.clear();
+	this->frame.clear();
 
-		this->noise_value = ofRandom(1000);
-	}
+	for (auto y = -300; y < 300; y += 30) {
 
-	for (int i = 0; i < 500; i++) {
+		for (auto x = -600; x <= 600; x += 1) {
 
-		this->location_list.push_back(glm::vec2(ofRandom(-360, 360), ofRandom(-360, 360)));
-		this->life_list.push_back(0);
-	}
+			vector<glm::vec3> vertices;
+			vertices.push_back(glm::vec3(x, y, 0));
+			vertices.push_back(glm::vec3(x + 1, y, 0));
+			vertices.push_back(glm::vec3(x + 1, y, 100));
+			vertices.push_back(glm::vec3(x, y, 100));
 
-	for (int i = this->location_list.size() - 1; i >= 0; i--) {
+			for (auto& vertex : vertices) {
 
-		if (this->life_list[i] > 100) {
+				if (vertex.z == 100) {
 
-			this->location_list.erase(this->location_list.begin() + i);
-			this->life_list.erase(this->life_list.begin() + i);
+					auto noise_value = ofNoise(y * 0.05, vertex.x * 0.0025, vertex.y * 0.0025, ofGetFrameNum() * 0.005);
+					if (noise_value > 0.5) {
+
+						vertex.z = ofMap(noise_value, 0.5, 1, 0, 1000);
+						vertex.z *= ofMap(y, -300, 300, 0, 1);
+						vertex.z *= ofMap(abs(x), 0, 600, 1, 0);
+
+						vertex.z = (int)vertex.z / 25 * 25;
+					}
+					else {
+
+						vertex.z = 0;
+					}
+				}
+			}
+
+			this->face.addVertices(vertices);
+			this->frame.addVertices(vertices);
+
+			this->face.addIndex(this->face.getNumVertices() - 1); this->face.addIndex(this->face.getNumVertices() - 4); this->face.addIndex(this->face.getNumVertices() - 3);
+			this->face.addIndex(this->face.getNumVertices() - 1); this->face.addIndex(this->face.getNumVertices() - 3); this->face.addIndex(this->face.getNumVertices() - 2);
+
+			this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 2);
+			this->frame.addIndex(this->frame.getNumVertices() - 3); this->frame.addIndex(this->frame.getNumVertices() - 4);
+
+			ofColor face_color = ofColor(y < -100 ? 0 : ofMap(y, -100, 300, 0, 239));
+			ofColor frame_color = ofColor(239);
+
+			this->face.addColor(face_color);
+			this->face.addColor(face_color);
+			this->face.addColor(face_color);
+			this->face.addColor(face_color);
+
+			this->frame.addColor(frame_color);
+			this->frame.addColor(frame_color);
+			this->frame.addColor(frame_color);
+			this->frame.addColor(frame_color);
 		}
-	}
-
-	for (int i = 0; i < this->location_list.size(); i++) {
-
-		auto deg = ofMap(ofNoise(
-			((int)this->location_list[i].x / 50 * 50) * 0.015,
-			((int)this->location_list[i].y / 50 * 50) * 0.015,
-			this->noise_value), 0, 1, (ofGetFrameNum() / 75) * 90 + 0, (ofGetFrameNum() / 75) * 90 + 180);
-		auto next = this->location_list[i] + glm::vec2(5 * cos(deg * DEG_TO_RAD), 5 * sin(deg * DEG_TO_RAD));
-
-		if (next.x < -300) { next.x = -300; }
-		if (next.x > 300) { next.x = 300; }
-		if (next.y < -300) { next.y = -300; }
-		if (next.y > 300) { next.y = 300; }
-
-		this->location_list[i] = next;
-		this->life_list[i] += 1;
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
+	this->cam.begin();
+	ofRotateX(270);
 
-	ofSetColor(39, 0, 139);
-	for (int i = 0; i < this->location_list.size(); i++) {
+	this->face.draw();
+	this->frame.drawWireframe();
 
-		auto size = this->life_list[i] < 30 ? ofMap(this->life_list[i], 0, 30, 0, 2) : 2;
-		ofDrawCircle(this->location_list[i], size);
-	}
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -80,7 +102,6 @@ void ofApp::draw() {
 	}
 	*/
 }
-
 
 //--------------------------------------------------------------
 int main() {
