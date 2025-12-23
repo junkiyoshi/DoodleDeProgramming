@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
@@ -16,7 +16,6 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	this->face.clear();
 	this->frame.clear();
 
 	for (auto y = -300; y < 300; y += 30) {
@@ -33,14 +32,12 @@ void ofApp::update() {
 
 				if (vertex.z == 100) {
 
-					auto noise_value = ofNoise(y * 0.05, vertex.x * 0.0025, vertex.y * 0.0025, ofGetFrameNum() * 0.005);
+					auto noise_value = ofNoise(y * 0.005, vertex.x * 0.0025, vertex.y * 0.0025, ofGetFrameNum() * 0.005);
 					if (noise_value > 0.5) {
 
 						vertex.z = ofMap(noise_value, 0.5, 1, 0, 1000);
 						vertex.z *= ofMap(y, -300, 300, 0, 1);
 						vertex.z *= ofMap(abs(x), 0, 600, 1, 0);
-
-						vertex.z = (int)vertex.z / 25 * 25;
 					}
 					else {
 
@@ -49,22 +46,12 @@ void ofApp::update() {
 				}
 			}
 
-			this->face.addVertices(vertices);
 			this->frame.addVertices(vertices);
-
-			this->face.addIndex(this->face.getNumVertices() - 1); this->face.addIndex(this->face.getNumVertices() - 4); this->face.addIndex(this->face.getNumVertices() - 3);
-			this->face.addIndex(this->face.getNumVertices() - 1); this->face.addIndex(this->face.getNumVertices() - 3); this->face.addIndex(this->face.getNumVertices() - 2);
 
 			this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 2);
 			this->frame.addIndex(this->frame.getNumVertices() - 3); this->frame.addIndex(this->frame.getNumVertices() - 4);
 
-			ofColor face_color = ofColor(y < -100 ? 0 : ofMap(y, -100, 300, 0, 239));
-			ofColor frame_color = ofColor(239);
-
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
+			ofColor frame_color = ofColor(y < -100 ? 239 : ofMap(y, -100, 300, 239, 39));
 
 			this->frame.addColor(frame_color);
 			this->frame.addColor(frame_color);
@@ -80,7 +67,6 @@ void ofApp::draw() {
 	this->cam.begin();
 	ofRotateX(270);
 
-	this->face.draw();
 	this->frame.drawWireframe();
 
 	this->cam.end();
