@@ -6,70 +6,88 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(2);
-	ofEnableDepthTest();
+	ofBackground(239);
+	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
 
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	for (int i = 0; i < 3; i++) {
+
+		this->noise_seed_list.push_back(glm::vec2(ofRandom(1000), ofRandom(1000)));
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	this->frame.clear();
+	int index = 0;
+	auto radius = 60;
+	for (auto& noise_seed : this->noise_seed_list) {
 
-	for (auto y = -300; y < 300; y += 30) {
+		auto deg = ofGetFrameNum() * 3 + index * 120;
+		auto next_deg = deg + 3;
 
-		for (auto x = -600; x <= 600; x += 1) {
+		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+		auto next = glm::vec2(radius * cos(next_deg * DEG_TO_RAD), radius * sin(next_deg * DEG_TO_RAD));
 
-			vector<glm::vec3> vertices;
-			vertices.push_back(glm::vec3(x, y, 0));
-			vertices.push_back(glm::vec3(x + 1, y, 0));
-			vertices.push_back(glm::vec3(x + 1, y, 100));
-			vertices.push_back(glm::vec3(x, y, 100));
+		auto distance = location - next;
+		distance *= 1;
 
-			for (auto& vertex : vertices) {
+		for (int i = 0; i < 2; i++) {
 
-				if (vertex.z == 100) {
+			auto future = location + distance * 8;
+			auto random_deg = ofRandom(360);
+			future += glm::vec2(4 * cos(random_deg * DEG_TO_RAD), 4 * sin(random_deg * DEG_TO_RAD));
+			auto future_distance = future - location;
 
-					auto noise_value = ofNoise(y * 0.005, vertex.x * 0.0025, vertex.y * 0.0025, ofGetFrameNum() * 0.005);
-					if (noise_value > 0.5) {
+			this->location_list.push_back(location);
+			this->velocity_list.push_back(glm::normalize(future_distance) * glm::length(distance));
+		}
 
-						vertex.z = ofMap(noise_value, 0.5, 1, 0, 1000);
-						vertex.z *= ofMap(y, -300, 300, 0, 1);
-						vertex.z *= ofMap(abs(x), 0, 600, 1, 0);
-					}
-					else {
+		index++;
+	}
 
-						vertex.z = 0;
-					}
-				}
-			}
+	for (int i = this->location_list.size() - 1; i > -1; i--) {
 
-			this->frame.addVertices(vertices);
+		this->location_list[i] += this->velocity_list[i];
+		this->velocity_list[i] *= 1.01;
 
-			this->frame.addIndex(this->frame.getNumVertices() - 1); this->frame.addIndex(this->frame.getNumVertices() - 2);
-			this->frame.addIndex(this->frame.getNumVertices() - 3); this->frame.addIndex(this->frame.getNumVertices() - 4);
+		if (glm::length(this->location_list[i]) > 360) {
 
-			ofColor frame_color = ofColor(y < -100 ? 239 : ofMap(y, -100, 300, 239, 39));
-
-			this->frame.addColor(frame_color);
-			this->frame.addColor(frame_color);
-			this->frame.addColor(frame_color);
-			this->frame.addColor(frame_color);
+			this->location_list.erase(this->location_list.begin() + i);
+			this->velocity_list.erase(this->velocity_list.begin() + i);
 		}
 	}
+
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(270);
+	ofTranslate(ofGetWindowSize() * 0.5);
+	ofRotateY(180);
 
-	this->frame.drawWireframe();
+	ofSetColor(0);
+	for (auto& location : this->location_list) {
 
-	this->cam.end();
+		ofPushMatrix();
+		ofTranslate(location);
+
+		auto size = ofMap(glm::length(location), 60, 320, 5, 50);
+		ofDrawRectangle(glm::vec2(), size, size);
+
+		ofPopMatrix();
+	}
+
+	ofSetColor(239);
+	for (auto& location : this->location_list) {
+
+		ofPushMatrix();
+		ofTranslate(location);
+
+		auto size = ofMap(glm::length(location), 60, 320, 1, 50);
+		ofDrawRectangle(glm::vec2(), size, size);
+
+		ofPopMatrix();
+	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
