@@ -21,4 +21,5 @@ public:
 	vector<glm::vec2> noise_seed_list;
 	vector<glm::vec2> location_list;
 	vector<glm::vec2> velocity_list;
+	vector<ofColor> color_list;
 };

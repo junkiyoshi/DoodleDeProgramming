@@ -6,10 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 4; i++) {
 
 		this->noise_seed_list.push_back(glm::vec2(ofRandom(1000), ofRandom(1000)));
 	}
@@ -19,11 +19,11 @@ void ofApp::setup() {
 void ofApp::update() {
 
 	int index = 0;
-	auto radius = 60;
+	auto radius = 30;
 	for (auto& noise_seed : this->noise_seed_list) {
 
-		auto deg = ofGetFrameNum() * 3 + index * 120;
-		auto next_deg = deg + 3;
+		auto deg = ofGetFrameNum() * 3 + index * 90;
+		auto next_deg = deg + 10;
 
 		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
 		auto next = glm::vec2(radius * cos(next_deg * DEG_TO_RAD), radius * sin(next_deg * DEG_TO_RAD));
@@ -31,15 +31,20 @@ void ofApp::update() {
 		auto distance = location - next;
 		distance *= 1;
 
-		for (int i = 0; i < 2; i++) {
+		ofColor color;
+
+		for (int i = 0; i < 1; i++) {
 
 			auto future = location + distance * 8;
 			auto random_deg = ofRandom(360);
-			future += glm::vec2(4 * cos(random_deg * DEG_TO_RAD), 4 * sin(random_deg * DEG_TO_RAD));
+			future += glm::vec2(15 * cos(random_deg * DEG_TO_RAD), 15 * sin(random_deg * DEG_TO_RAD));
 			auto future_distance = future - location;
 
 			this->location_list.push_back(location);
 			this->velocity_list.push_back(glm::normalize(future_distance) * glm::length(distance));
+
+			color.setHsb(ofMap(index, 0, this->noise_seed_list.size(), 0, 255), 180, 255);
+			this->color_list.push_back(color);
 		}
 
 		index++;
@@ -54,6 +59,7 @@ void ofApp::update() {
 
 			this->location_list.erase(this->location_list.begin() + i);
 			this->velocity_list.erase(this->velocity_list.begin() + i);
+			this->color_list.erase(this->color_list.begin() + i);
 		}
 	}
 
@@ -65,26 +71,28 @@ void ofApp::draw() {
 	ofTranslate(ofGetWindowSize() * 0.5);
 	ofRotateY(180);
 
-	ofSetColor(0);
+	int index = 0;
 	for (auto& location : this->location_list) {
 
 		ofPushMatrix();
 		ofTranslate(location);
 
-		auto size = ofMap(glm::length(location), 60, 320, 5, 50);
-		ofDrawRectangle(glm::vec2(), size, size);
+		ofSetColor(this->color_list[index++]);
+
+		auto size = ofMap(glm::length(location), 30, 300, 5, 45);
+		ofDrawCircle(glm::vec2(), size);
 
 		ofPopMatrix();
 	}
 
-	ofSetColor(239);
+	ofSetColor(39);
 	for (auto& location : this->location_list) {
 
 		ofPushMatrix();
 		ofTranslate(location);
 
-		auto size = ofMap(glm::length(location), 60, 320, 1, 50);
-		ofDrawRectangle(glm::vec2(), size, size);
+		auto size = ofMap(glm::length(location), 30, 300, 1, 45);
+		ofDrawCircle(glm::vec2(), size);
 
 		ofPopMatrix();
 	}
