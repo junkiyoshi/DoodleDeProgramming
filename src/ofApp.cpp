@@ -4,102 +4,51 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openFrameworks");
+	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
+	ofBackground(239);
+	ofSetLineWidth(2);
+	ofEnableDepthTest();
 
-	for (int i = 0; i < 4; i++) {
-
-		this->noise_seed_list.push_back(glm::vec2(ofRandom(1000), ofRandom(1000)));
-	}
+	this->hexagon_height = 32;
+	this->hexagon_width = 6;
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-
-	int index = 0;
-	auto radius = 30;
-	for (auto& noise_seed : this->noise_seed_list) {
-
-		auto deg = ofGetFrameNum() * 3 + index * 90;
-		auto next_deg = deg + 10;
-
-		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-		auto next = glm::vec2(radius * cos(next_deg * DEG_TO_RAD), radius * sin(next_deg * DEG_TO_RAD));
-
-		auto distance = location - next;
-		distance *= 1;
-
-		ofColor color;
-
-		for (int i = 0; i < 1; i++) {
-
-			auto future = location + distance * 8;
-			auto random_deg = ofRandom(360);
-			future += glm::vec2(15 * cos(random_deg * DEG_TO_RAD), 15 * sin(random_deg * DEG_TO_RAD));
-			auto future_distance = future - location;
-
-			this->location_list.push_back(location);
-			this->velocity_list.push_back(glm::normalize(future_distance) * glm::length(distance));
-
-			color.setHsb(ofMap(index, 0, this->noise_seed_list.size(), 0, 255), 180, 255);
-			this->color_list.push_back(color);
-		}
-
-		index++;
-	}
-
-	for (int i = this->location_list.size() - 1; i > -1; i--) {
-
-		this->location_list[i] += this->velocity_list[i];
-		this->velocity_list[i] *= 1.01;
-
-		if (glm::length(this->location_list[i]) > 360) {
-
-			this->location_list.erase(this->location_list.begin() + i);
-			this->velocity_list.erase(this->velocity_list.begin() + i);
-			this->color_list.erase(this->color_list.begin() + i);
-		}
-	}
 
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
-	ofRotateY(180);
+	this->cam.begin();
+	ofRotateX(90);
+	ofRotateZ(ofGetFrameNum() * 0.72);
 
-	int index = 0;
-	for (auto& location : this->location_list) {
+	for (int deg = 0; deg < 360; deg += 10) {
+
+		int number_index = ofMap(ofNoise(cos(deg * DEG_TO_RAD) * 2, sin(deg * DEG_TO_RAD) * 2, ofGetFrameNum() * 0.015), 0, 1, 0, 10);
 
 		ofPushMatrix();
-		ofTranslate(location);
+		ofRotate(deg);
 
-		ofSetColor(this->color_list[index++]);
+		ofTranslate(glm::vec3(0, 300, 0));
+		ofRotateX(90);
 
-		auto size = ofMap(glm::length(location), 30, 300, 5, 45);
-		ofDrawCircle(glm::vec2(), size);
+		ofColor color;
+		color.setHsb(ofMap(deg, 0, 360, 0, 255), 180, 255);
+
+		this->draw_digital(glm::vec3(0), number_index, color);
 
 		ofPopMatrix();
 	}
 
-	ofSetColor(39);
-	for (auto& location : this->location_list) {
-
-		ofPushMatrix();
-		ofTranslate(location);
-
-		auto size = ofMap(glm::length(location), 30, 300, 1, 45);
-		ofDrawCircle(glm::vec2(), size);
-
-		ofPopMatrix();
-	}
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 350;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -113,6 +62,70 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_digital(glm::vec3 location, int number_index, ofColor color) {
+
+	vector<pair<glm::vec3, float>> part_list = {
+		std::make_pair<glm::vec3, float>(location + glm::vec2(0, -this->hexagon_height), 90),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * 0.5), 0),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * 0.5), 0),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(0, 0), 90),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * -0.5), 0),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * -0.5), 0),
+		std::make_pair<glm::vec3, float>(location + glm::vec2(0, this->hexagon_height), 90)
+	};
+
+	vector<vector<int>> index_list = {
+		{ 0, 1, 2, 4, 5, 6 },
+		{ 2, 5 },
+		{ 0, 1, 3, 5, 6 },
+		{ 0, 2, 3, 5, 6 },
+		{ 2, 3, 4, 5 },
+		{ 0, 2, 3, 4, 6 },
+		{ 0, 1, 2, 3, 4, 6 },
+		{ 0, 2, 5 },
+		{ 0, 1, 2, 3, 4, 5, 6 },
+		{ 0, 2, 3, 4, 5, 6 },
+	};
+
+	for (auto& index : index_list[number_index]) {
+
+		this->draw_hexagon(part_list[index].first, part_list[index].second, color);
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_hexagon(glm::vec3 location, float deg, ofColor color) {
+
+	ofPushMatrix();
+	ofTranslate(location);
+	ofRotate(deg);
+
+	vector<glm::vec2> vertices;
+	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * -0.4));
+	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * 0.4));
+	vertices.push_back(glm::vec2(0, this->hexagon_height * 0.5));
+	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * 0.4));
+	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * -0.4));
+	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
+
+	ofFill();
+	ofSetColor(0);
+
+	ofBeginShape();
+	ofVertices(vertices);
+	ofEndShape(true);
+
+	ofNoFill();
+	ofSetColor(color);
+
+	ofBeginShape();
+	ofVertices(vertices);
+	ofEndShape(true);
+
+	ofPopMatrix();
 }
 
 //--------------------------------------------------------------
