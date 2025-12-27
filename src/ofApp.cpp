@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
@@ -24,24 +24,36 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(90);
-	ofRotateZ(ofGetFrameNum() * 0.72);
 
-	for (int deg = 0; deg < 360; deg += 10) {
+	for (int z = -600; z <= 600; z += 75) {
 
-		int number_index = ofMap(ofNoise(cos(deg * DEG_TO_RAD) * 2, sin(deg * DEG_TO_RAD) * 2, ofGetFrameNum() * 0.015), 0, 1, 0, 10);
+		for (int deg = 0; deg < 360; deg += 8) {
 
-		ofPushMatrix();
-		ofRotate(deg);
+			int number_index = ofMap(ofNoise(cos(deg * DEG_TO_RAD), sin(deg * DEG_TO_RAD), z, ofGetFrameNum() * 0.01), 0, 1, 0, 10);
 
-		ofTranslate(glm::vec3(0, 300, 0));
-		ofRotateX(90);
+			ofPushMatrix();
+			ofRotate(deg);
 
-		ofColor color;
-		color.setHsb(ofMap(deg, 0, 360, 0, 255), 180, 255);
+			ofTranslate(glm::vec3(0, 300, z));
+			ofRotateX(90);
 
-		this->draw_digital(glm::vec3(0), number_index, color);
+			ofColor color(0, 255, 0);
+			if (deg > 90 && deg < 270) {
 
-		ofPopMatrix();
+				if (deg < 180) {
+
+					color = ofColor(0, ofMap(deg, 90, 180, 200, 39), 0);
+				}
+				else {
+
+					color = ofColor(0, ofMap(deg, 180, 270, 39, 200), 0);
+				}
+			}
+
+			this->draw_digital(glm::vec3(0), number_index, color);
+
+			ofPopMatrix();
+		}
 	}
 
 	this->cam.end();
@@ -112,7 +124,7 @@ void ofApp::draw_hexagon(glm::vec3 location, float deg, ofColor color) {
 	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
 
 	ofFill();
-	ofSetColor(0);
+	ofSetColor(39);
 
 	ofBeginShape();
 	ofVertices(vertices);
