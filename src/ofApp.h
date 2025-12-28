@@ -14,17 +14,16 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
-	void mouseEntered(int x, int y) {};
-	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void draw_digital(glm::vec3 location, int number_index, ofColor color);
-	void draw_hexagon(glm::vec3 location, float deg, ofColor color);
-
-	float hexagon_height;
-	float hexagon_width;
+	void setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float size);
+	void setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float height, float width, float depth);
 
 	ofEasyCam cam;
+	ofMesh face, frame;
+
+	vector<glm::vec3> location_list;
+	vector<ofColor> color_list;
 };

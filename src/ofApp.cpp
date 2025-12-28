@@ -4,57 +4,50 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(2);
+	ofBackground(239);
 	ofEnableDepthTest();
 
-	this->hexagon_height = 32;
-	this->hexagon_width = 6;
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+
+	int span = 6;
+	for (int x = -120; x <= 120; x += span) {
+
+		for (int y = -120; y <= 120; y += span) {
+
+			for (int z = -120; z <= 120; z += span) {
+
+				this->location_list.push_back(glm::vec3(x, y, z));
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	ofSeedRandom(39);
+
+	this->face.clear();
+	this->frame.clear();
+
+	float size = 6;
+	for (int i = 0; i < this->location_list.size(); i++) {
+
+		this->setBoxToMesh(this->face, this->frame, this->location_list[i], size);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(90);
+	ofRotateY(ofGetFrameNum() * 1.44);
+	ofRotateX(ofGetFrameNum() * 0.72);
 
-	for (int z = -600; z <= 600; z += 75) {
-
-		for (int deg = 0; deg < 360; deg += 8) {
-
-			int number_index = ofMap(ofNoise(cos(deg * DEG_TO_RAD), sin(deg * DEG_TO_RAD), z, ofGetFrameNum() * 0.01), 0, 1, 0, 10);
-
-			ofPushMatrix();
-			ofRotate(deg);
-
-			ofTranslate(glm::vec3(0, 300, z));
-			ofRotateX(90);
-
-			ofColor color(0, 255, 0);
-			if (deg > 90 && deg < 270) {
-
-				if (deg < 180) {
-
-					color = ofColor(0, ofMap(deg, 90, 180, 200, 39), 0);
-				}
-				else {
-
-					color = ofColor(0, ofMap(deg, 180, 270, 39, 200), 0);
-				}
-			}
-
-			this->draw_digital(glm::vec3(0), number_index, color);
-
-			ofPopMatrix();
-		}
-	}
+	this->face.draw();
+	this->frame.drawWireframe();
 
 	this->cam.end();
 
@@ -77,67 +70,88 @@ void ofApp::draw() {
 }
 
 //--------------------------------------------------------------
-void ofApp::draw_digital(glm::vec3 location, int number_index, ofColor color) {
+void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float size) {
 
-	vector<pair<glm::vec3, float>> part_list = {
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, -this->hexagon_height), 90),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * 0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * 0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, 0), 90),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * -0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * -0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, this->hexagon_height), 90)
-	};
-
-	vector<vector<int>> index_list = {
-		{ 0, 1, 2, 4, 5, 6 },
-		{ 2, 5 },
-		{ 0, 1, 3, 5, 6 },
-		{ 0, 2, 3, 5, 6 },
-		{ 2, 3, 4, 5 },
-		{ 0, 2, 3, 4, 6 },
-		{ 0, 1, 2, 3, 4, 6 },
-		{ 0, 2, 5 },
-		{ 0, 1, 2, 3, 4, 5, 6 },
-		{ 0, 2, 3, 4, 5, 6 },
-	};
-
-	for (auto& index : index_list[number_index]) {
-
-		this->draw_hexagon(part_list[index].first, part_list[index].second, color);
-	}
+	this->setBoxToMesh(face_target, frame_target, location, size, size, size);
 }
 
 //--------------------------------------------------------------
-void ofApp::draw_hexagon(glm::vec3 location, float deg, ofColor color) {
+void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float height, float width, float depth) {
 
-	ofPushMatrix();
-	ofTranslate(location);
-	ofRotate(deg);
+	auto noise_value = ofNoise(glm::vec4(location.x * 0.01, location.y * 0.01, location.z * 0.01, ofGetFrameNum() * 0.01));
 
-	vector<glm::vec2> vertices;
-	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * -0.4));
-	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * 0.4));
-	vertices.push_back(glm::vec2(0, this->hexagon_height * 0.5));
-	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * 0.4));
-	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * -0.4));
-	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
+	ofColor face_color(39), frame_color(239);
 
-	ofFill();
-	ofSetColor(39);
+	if (noise_value > 0.4 && noise_value < 0.6) {
+	
+		if (noise_value > 0.47 && noise_value < 0.53) {
 
-	ofBeginShape();
-	ofVertices(vertices);
-	ofEndShape(true);
+			face_color = ofColor(255, 0, 0);
+		}
+		else {
 
-	ofNoFill();
-	ofSetColor(color);
+			return;
+		}
+	}
 
-	ofBeginShape();
-	ofVertices(vertices);
-	ofEndShape(true);
+	int face_index = face_target.getNumVertices();
+	int frame_index = frame_target.getNumVertices();
 
-	ofPopMatrix();
+	vector<glm::vec3> vertices;
+	vertices.push_back(glm::vec3(width * -0.5, height * 0.5, depth * -0.5));
+	vertices.push_back(glm::vec3(width * 0.5, height * 0.5, depth * -0.5));
+	vertices.push_back(glm::vec3(width * 0.5, height * 0.5, depth * 0.5));
+	vertices.push_back(glm::vec3(width * -0.5, height * 0.5, depth * 0.5));
+
+	vertices.push_back(glm::vec3(width * -0.5, height * -0.5, depth * -0.5));
+	vertices.push_back(glm::vec3(width * 0.5, height * -0.5, depth * -0.5));
+	vertices.push_back(glm::vec3(width * 0.5, height * -0.5, depth * 0.5));
+	vertices.push_back(glm::vec3(width * -0.5, height * -0.5, depth * 0.5));
+
+	for (auto& vertex : vertices) {
+
+		face_target.addVertex(location + vertex * 0.99);
+		frame_target.addVertex(location + vertex);
+	}
+
+	face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 2);
+	face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 3);
+
+	face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 6);
+	face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 7);
+
+	face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 1);
+	face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 1);
+
+	face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 6);
+	face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 1);
+
+	face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 7);
+	face_target.addIndex(face_index + 7); face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 2);
+
+	face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 7); face_target.addIndex(face_index + 4);
+	face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 3);
+
+	frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 1);
+	frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 2);
+	frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
+	frame_target.addIndex(frame_index + 3); frame_target.addIndex(frame_index + 0);
+
+	frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 5);
+	frame_target.addIndex(frame_index + 5); frame_target.addIndex(frame_index + 6);
+	frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 7);
+	frame_target.addIndex(frame_index + 7); frame_target.addIndex(frame_index + 4);
+
+	frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 4);
+	frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 5);
+	frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 6);
+	frame_target.addIndex(frame_index + 3); frame_target.addIndex(frame_index + 7);
+
+	for (int i = 0; i < 8; i++) {
+
+		face_target.addColor(face_color);
+		frame_target.addColor(frame_color);
+	}
 }
 
 //--------------------------------------------------------------
