@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -18,19 +19,19 @@ void ofApp::update() {
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 0.2;
-	float theta_deg_step = 0.2;
+	float phi_deg_step = 0.1;
+	float theta_deg_step = 0.1;
 	float noise_threshold_1 = 0.45;
 	float noise_threshold_2 = 0.55;
-	float noise_span = 3;
-	float radius = 230;
+	float noise_span = 8;
+	float radius = 280;
 
 	ofColor face_color(0);
 	ofColor line_color(255);
 
 	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
-		for (float theta_deg = 0; theta_deg <= 180; theta_deg += theta_deg_step) {
+		for (float theta_deg = 61; theta_deg <= 121; theta_deg += theta_deg_step) {
 
 			auto noise_value = ofNoise(
 				cos(phi_deg * DEG_TO_RAD) * noise_span,
@@ -38,7 +39,7 @@ void ofApp::update() {
 				cos(theta_deg * DEG_TO_RAD) * noise_span,
 				ofGetFrameNum() * 0.02);
 
-			if ((int)theta_deg % 15 < 5) { noise_value = 0.5; }
+			if ((int)theta_deg % 15 < 2 || (int)phi_deg % 15 < 2) { noise_value = 0.5; }
 			if (noise_value < noise_threshold_1 || noise_value > noise_threshold_2) { continue; }
 
 			auto noise_value_1 = ofNoise(
@@ -62,10 +63,10 @@ void ofApp::update() {
 				cos((theta_deg + theta_deg_step) * DEG_TO_RAD) * noise_span,
 				ofGetFrameNum() * 0.02);
 
-			if ((int)(theta_deg - theta_deg_step) % 15 < 5) { noise_value_1 = 0.5; }
-			if ((int)theta_deg % 15 < 5) { noise_value_2 = 0.5; }
-			if ((int)theta_deg % 15 < 5) { noise_value_3 = 0.5; }
-			if ((int)(theta_deg + theta_deg_step) % 15 < 5) { noise_value_4 = 0.5; }
+			if ((int)(theta_deg - theta_deg_step) % 15 < 2 || (int)phi_deg % 15 < 2) { noise_value_1 = 0.5; }
+			if ((int)theta_deg % 15 < 2 || (int)(phi_deg + phi_deg_step) % 15 < 2) { noise_value_2 = 0.5; }
+			if ((int)theta_deg % 15 < 2 || (int)(phi_deg - phi_deg_step) % 15 < 2) { noise_value_3 = 0.5; }
+			if ((int)(theta_deg + theta_deg_step) % 15 < 2 || (int)phi_deg % 15 < 2) { noise_value_4 = 0.5; }
 
 			auto index = this->face.getNumVertices();
 			vector<glm::vec3> vertices;
@@ -133,7 +134,7 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(270);
-	ofRotateZ(ofGetFrameNum());
+	ofRotateZ(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
 	this->line.draw();
