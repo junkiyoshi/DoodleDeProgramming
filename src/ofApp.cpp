@@ -6,10 +6,11 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(2);
+	ofBackground(39);
+	ofNoFill();
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 
-	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 220, true, true, true);
+	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 250, true, true, true);
 
 	ofFbo fbo;
 	fbo.allocate(ofGetWidth(), ofGetHeight());
@@ -18,7 +19,7 @@ void ofApp::setup() {
 	ofClear(0);
 	ofSetColor(0);
 
-	auto word = "2026";
+	auto word = "HNY";
 	font.drawString(word, font.stringWidth(word) * -0.5, font.stringHeight(word) - 300);
 
 	fbo.end();
@@ -55,16 +56,17 @@ void ofApp::update() {
 		}
 	}
 
-	ofColor color(39);
-	for (int i = 0; i < 50; i++) {
+	ofColor color;
+	for (int i = 0; i < 30; i++) {
 
 		int rnd_index = ofRandom(this->font_location_list.size());
 
 		auto location = this->font_location_list[rnd_index];
 		this->location_list.push_back(location);
 		this->radius_list.push_back(1);
-		this->speed_list.push_back(ofRandom(0.25, 0.5));
-		this->max_radius_list.push_back(ofRandom(5, 15));
+		this->speed_list.push_back(0.5);
+		this->max_radius_list.push_back(13);
+		color.setHsb(ofRandom(255), 180, 255);
 		this->color_list.push_back(color);
 	}
 }
@@ -85,7 +87,11 @@ void ofApp::draw() {
 			ofSetColor(ofColor(this->color_list[i], ofMap(this->radius_list[i], this->max_radius_list[i] * 0.5, this->max_radius_list[i], 255, 0)));
 		}
 
+		ofNoFill();
 		ofDrawCircle(this->location_list[i], this->radius_list[i]);
+
+		ofFill();
+		ofDrawCircle(this->location_list[i], this->radius_list[i] * 0.4);
 	}
 
 	/*
