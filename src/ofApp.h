@@ -18,5 +18,9 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
+	ofEasyCam cam;
+	float base_radius;
+	ofIcoSpherePrimitive ico_sphere;
+	ofMesh face, frame;
 	float noise_param;
 };
