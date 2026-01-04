@@ -6,14 +6,16 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(39);
+	ofBackground(39);
 	ofSetCircleResolution(60);
+
+	this->noise_param = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	this->noise_param += 0.025;
 }
 
 //--------------------------------------------------------------
@@ -21,50 +23,23 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	float start_radius = 100;
+	float start_radius = 5;
 	float end_radius = 600;
 
-	ofFill();
-	ofSetColor(239, 39, 39);
 	for (float deg = 0; deg < 360; deg += 0.25) {
 
 		for (float radius = start_radius; radius < end_radius; radius += 1) {
 
 			auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
 			auto noise_location = glm::vec2(cos(deg * DEG_TO_RAD), sin(deg * DEG_TO_RAD));
-			auto noise_value = ofNoise(glm::vec3(noise_location * 5, radius * 0.005 - ofGetFrameNum() * 0.05));
+			auto noise_value = ofNoise(glm::vec4(noise_location * 3, radius * 0.005, this->noise_param));
 
-			if (noise_value > 0.43 && noise_value < 0.57) {
+			if (noise_value >= 0.4 && noise_value <= 0.6) {
 
-				ofDrawCircle(location, 4);
+				ofSetColor(ofMap(abs(0.5 - noise_value), 0, 0.1, 255, 39));
+				ofDrawCircle(location, 1.5);
 			}
 		}
-	}
-
-	for (float deg = 0; deg < 360; deg += 0.5) {
-
-		ofDrawCircle(glm::vec2((start_radius - 8) * cos(deg * DEG_TO_RAD), (start_radius - 8) * sin(deg * DEG_TO_RAD)), 3);
-	}
-
-	ofSetColor(39);
-	for (float deg = 0; deg < 360; deg += 0.25) {
-
-		for (float radius = start_radius; radius < end_radius; radius += 1) {
-
-			auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-			auto noise_location = glm::vec2(cos(deg * DEG_TO_RAD), sin(deg * DEG_TO_RAD));
-			auto noise_value = ofNoise(glm::vec3(noise_location * 5, radius * 0.005 - ofGetFrameNum() * 0.05));
-
-			if (noise_value > 0.43 && noise_value < 0.57) {
-
-				ofDrawCircle(location, 2);
-			}
-		}
-	}
-
-	for (float deg = 0; deg < 360; deg += 0.5) {
-
-		ofDrawCircle(glm::vec2((start_radius - 8) * cos(deg * DEG_TO_RAD), (start_radius - 8) * sin(deg * DEG_TO_RAD)), 1);
 	}
 
 	/*
