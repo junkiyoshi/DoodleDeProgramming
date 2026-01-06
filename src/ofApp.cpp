@@ -6,11 +6,11 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->base_radius = 30;
-	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 1);
+	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 4);
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	this->noise_param = ofRandom(1000);
@@ -25,7 +25,7 @@ void ofApp::update() {
 	this->frame.clear();
 
 	int radius_start = this->base_radius;
-	int radius_max = this->base_radius * 12;
+	int radius_max = this->base_radius * 2;
 	for (auto& triangle : this->ico_sphere.getMesh().getUniqueFaces()) {
 
 		auto noise_seed_x = ofRandom(1000);
@@ -41,7 +41,7 @@ void ofApp::update() {
 			auto mesh_index = this->face.getNumVertices();
 			auto frame_index = this->frame.getNumVertices();
 
-			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 0.1);
+			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 0.025);
 
 			auto angle_x = ofMap(ofNoise(noise_seed_x, radius * 0.0075 + this->noise_param), 0, 1, -param, param);
 			auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
@@ -64,7 +64,7 @@ void ofApp::update() {
 			for (int i = 0; i < vertices.size(); i++) {
 
 				this->face.addColor(ofColor(39));
-				this->frame.addColor(ofColor(255, 139, 139));
+				this->frame.addColor(ofColor(239));
 			}
 
 			if (radius == radius_start || radius == radius_end) {
