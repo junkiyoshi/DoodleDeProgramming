@@ -6,11 +6,11 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(3);
+	ofBackground(39);
+	ofSetLineWidth(1);
 	ofEnableDepthTest();
 
-	auto radius = 4;
+	auto radius = 6;
 	auto x_span = radius * sqrt(3);
 	auto flg = true;
 	for (float y = -500; y < 500; y += radius * 1.5) {
@@ -76,18 +76,14 @@ void ofApp::update() {
 
 	for (int i = 0; i < this->location_list.size(); i++) {
 
-		auto height = 5.f;
+		auto height = ofMap(this->life_list[i], 0, 200, 0.f, 300);
 		if (this->life_list[i] > 10) {
 
-			this->setHexagonToMesh(this->face, this->frame, this->location_list[i], 4, height);
+			this->setHexagonToMesh(this->face, this->frame, this->location_list[i], 6, height);
 		}
 		else if (this->life_list[i] > 0) {
 
-			this->setHexagonToMesh(this->face, this->frame, this->location_list[i], ofMap(this->life_list[i], 0, 10, 0, 4), height);
-		}
-		else {
-
-			//this->setHexagonToMesh(this->face, this->frame, this->location_list[i], 15, height);
+			this->setHexagonToMesh(this->face, this->frame, this->location_list[i], ofMap(this->life_list[i], 0, 10, 0, 6), height);
 		}
 	}
 }
@@ -104,7 +100,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 800;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -123,8 +119,8 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 void ofApp::setHexagonToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float radius, float height) {
 
-	ofColor face_color = ofColor(255);
-	ofColor frame_color = ofColor(0);
+	ofColor face_color = ofColor(0);
+	ofColor frame_color = ofColor(255);
 
 	for (int deg = 90; deg < 450; deg += 60) {
 
