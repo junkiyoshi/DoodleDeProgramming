@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame_mesh.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -21,10 +21,9 @@ void ofApp::update() {
 	this->frame_mesh.clear();
 
 	auto R = 200;
-	auto r = 50;
+	auto r = 100;
 	auto v_span = 2;
 	auto u_span = 3;
-
 
 	int index = 0;
 	for (auto v = 0; v < 360; v += v_span) {
@@ -39,21 +38,14 @@ void ofApp::update() {
 
 			float noise_value, height;
 
-			noise_value = ofNoise(glm::vec4(vertices[0] * 0.005, ofGetFrameNum() * 0.025));
-			height = noise_value > 0.45 && noise_value < 0.55 ? 25 : 0;
-			vertices.push_back(this->make_point(R, r + height, u, v));
+			auto avg = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4;
+			noise_value = ofNoise(glm::vec4(avg * 0.03, ofGetFrameNum() * 0.005));
+			height = noise_value > 0.45 && noise_value < 0.55 ? 60 : 0;
 
-			noise_value = ofNoise(glm::vec4(vertices[1] * 0.005, ofGetFrameNum() * 0.025));
-			height = noise_value > 0.45 && noise_value < 0.55 ? 25 : 0;
-			vertices.push_back(this->make_point(R, r + height, u + u_span, v));
-
-			noise_value = ofNoise(glm::vec4(vertices[2] * 0.005, ofGetFrameNum() * 0.025));
-			height = noise_value > 0.45 && noise_value < 0.55 ? 25 : 0;
-			vertices.push_back(this->make_point(R, r + height, u + u_span, v + v_span));
-
-			noise_value = ofNoise(glm::vec4(vertices[3] * 0.005, ofGetFrameNum() * 0.025));
-			height = noise_value > 0.45 && noise_value < 0.55 ? 25 : 0;
-			vertices.push_back(this->make_point(R, r + height, u, v + v_span));
+			vertices.push_back(this->make_point(R, r - height, u, v));
+			vertices.push_back(this->make_point(R, r - height, u + u_span, v));
+			vertices.push_back(this->make_point(R, r - height, u + u_span, v + v_span));
+			vertices.push_back(this->make_point(R, r - height, u, v + v_span));
 
 			int index = this->face_mesh.getNumVertices();
 			this->face_mesh.addVertices(vertices);
@@ -103,7 +95,8 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 1.44);
+	ofRotateX(90);
+	ofRotateZ(ofGetFrameNum() * 0.36);
 
 	ofSetColor(0);
 	this->face_mesh.drawFaces();
