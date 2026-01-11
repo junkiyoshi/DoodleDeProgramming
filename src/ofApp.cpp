@@ -4,12 +4,12 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
+	ofBackground(239);
 	ofEnableDepthTest();
 
-	this->frame_mesh.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	ofNoFill();
 }
 
 //--------------------------------------------------------------
@@ -17,76 +17,68 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	this->face_mesh.clear();
-	this->frame_mesh.clear();
+	this->mesh.clear();
 
-	auto R = 200;
-	auto r = 100;
-	auto v_span = 2;
-	auto u_span = 3;
+	int len = 300;
+	int span = 1;
 
-	int index = 0;
-	for (auto v = 0; v < 360; v += v_span) {
+	float angle;
+	glm::highp_mat4 rotation;
+	for (int i = 0; i <= 6; i++) {
 
-		for (auto u = 0; u < 360; u += u_span) {
+		for (int x = len * -0.5; x < len * 0.5; x += span) {
 
-			vector<glm::vec3> vertices;
-			vertices.push_back(this->make_point(R, r, u, v));
-			vertices.push_back(this->make_point(R, r, u + u_span, v));
-			vertices.push_back(this->make_point(R, r, u + u_span, v + v_span));
-			vertices.push_back(this->make_point(R, r, u, v + v_span));
+			for (int y = len * -0.5; y < len * 0.5; y += span) {
 
-			float noise_value, height;
+				if (i <= 4) {
 
-			auto avg = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) / 4;
-			noise_value = ofNoise(glm::vec4(avg * 0.03, ofGetFrameNum() * 0.005));
-			height = noise_value > 0.45 && noise_value < 0.55 ? 60 : 0;
+					angle = PI * 0.5 * i;
+					rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
+				}
 
-			vertices.push_back(this->make_point(R, r - height, u, v));
-			vertices.push_back(this->make_point(R, r - height, u + u_span, v));
-			vertices.push_back(this->make_point(R, r - height, u + u_span, v + v_span));
-			vertices.push_back(this->make_point(R, r - height, u, v + v_span));
+				if (i == 5) {
 
-			int index = this->face_mesh.getNumVertices();
-			this->face_mesh.addVertices(vertices);
-			this->frame_mesh.addVertices(vertices);
+					angle = PI * 0.5;
+					rotation = glm::rotate(glm::mat4(), angle, glm::vec3(1, 0, 0));
+				}
 
-			// Face Index
+				if (i == 6) {
 
-			this->face_mesh.addIndex(index + 0); this->face_mesh.addIndex(index + 1); this->face_mesh.addIndex(index + 2);
-			this->face_mesh.addIndex(index + 0); this->face_mesh.addIndex(index + 2); this->face_mesh.addIndex(index + 3);
+					angle = PI * 0.5 * 3;
+					rotation = glm::rotate(glm::mat4(), angle, glm::vec3(1, 0, 0));
+				}
 
-			this->face_mesh.addIndex(index + 4); this->face_mesh.addIndex(index + 5); this->face_mesh.addIndex(index + 6);
-			this->face_mesh.addIndex(index + 4); this->face_mesh.addIndex(index + 6); this->face_mesh.addIndex(index + 7);
+				glm::vec3 noise_location = glm::vec4(x, y, len * 0.5, 0) * rotation;
+				auto noise_value = ofNoise(noise_location.x * 0.012, noise_location.y * 0.012, noise_location.z * 0.012, ofGetFrameNum() * 0.001);
 
-			this->face_mesh.addIndex(index + 0); this->face_mesh.addIndex(index + 4); this->face_mesh.addIndex(index + 5);
-			this->face_mesh.addIndex(index + 0); this->face_mesh.addIndex(index + 5); this->face_mesh.addIndex(index + 1);
+				if (noise_value < 0.4 || noise_value > 0.5) {
 
-			this->face_mesh.addIndex(index + 1); this->face_mesh.addIndex(index + 5); this->face_mesh.addIndex(index + 6);
-			this->face_mesh.addIndex(index + 1); this->face_mesh.addIndex(index + 6); this->face_mesh.addIndex(index + 2);
+					continue;
+				}
 
-			this->face_mesh.addIndex(index + 2); this->face_mesh.addIndex(index + 6); this->face_mesh.addIndex(index + 7);
-			this->face_mesh.addIndex(index + 2); this->face_mesh.addIndex(index + 7); this->face_mesh.addIndex(index + 3);
+				vector<glm::vec3> vertices;
+				vertices.push_back(glm::vec4(x, y, len * 0.5, 0) * rotation);
+				vertices.push_back(glm::vec4(x + span, y, len * 0.5, 0) * rotation);
+				vertices.push_back(glm::vec4(x + span, y + span, len * 0.5, 0) * rotation);
+				vertices.push_back(glm::vec4(x, y + span, len * 0.5, 0) * rotation);
+				this->mesh.addVertices(vertices);
 
-			this->face_mesh.addIndex(index + 3); this->face_mesh.addIndex(index + 7); this->face_mesh.addIndex(index + 4);
-			this->face_mesh.addIndex(index + 3); this->face_mesh.addIndex(index + 4); this->face_mesh.addIndex(index + 0);
+				this->mesh.addIndex(this->mesh.getNumVertices() - 1); this->mesh.addIndex(this->mesh.getNumVertices() - 4); this->mesh.addIndex(this->mesh.getNumVertices() - 3);
+				this->mesh.addIndex(this->mesh.getNumVertices() - 1); this->mesh.addIndex(this->mesh.getNumVertices() - 2); this->mesh.addIndex(this->mesh.getNumVertices() - 3);
 
-			// Frame Index
 
-			this->frame_mesh.addIndex(index + 0); this->frame_mesh.addIndex(index + 1);
-			this->frame_mesh.addIndex(index + 1); this->frame_mesh.addIndex(index + 2);
-			this->frame_mesh.addIndex(index + 2); this->frame_mesh.addIndex(index + 3);
-			this->frame_mesh.addIndex(index + 3); this->frame_mesh.addIndex(index + 0);
+				for (int i = 0; i < 4; i++) {
 
-			this->frame_mesh.addIndex(index + 4); this->frame_mesh.addIndex(index + 5);
-			this->frame_mesh.addIndex(index + 5); this->frame_mesh.addIndex(index + 6);
-			this->frame_mesh.addIndex(index + 6); this->frame_mesh.addIndex(index + 7);
-			this->frame_mesh.addIndex(index + 7); this->frame_mesh.addIndex(index + 4);
+					if (noise_value > 0.44 && noise_value < 0.46) {
 
-			this->frame_mesh.addIndex(index + 0); this->frame_mesh.addIndex(index + 4);
-			this->frame_mesh.addIndex(index + 1); this->frame_mesh.addIndex(index + 5);
-			this->frame_mesh.addIndex(index + 2); this->frame_mesh.addIndex(index + 6);
-			this->frame_mesh.addIndex(index + 3); this->frame_mesh.addIndex(index + 7);
+						this->mesh.addColor(ofColor(239, 39, 39));
+					}
+					else {
+
+						this->mesh.addColor(ofColor(0));
+					}
+				}
+			}
 		}
 	}
 }
@@ -95,14 +87,10 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(90);
-	ofRotateZ(ofGetFrameNum() * 0.36);
+	ofRotateY(ofGetFrameNum() * 1.44);
+	ofRotateX(ofGetFrameNum() * 2.88);
 
-	ofSetColor(0);
-	this->face_mesh.drawFaces();
-
-	ofSetColor(139);
-	this->frame_mesh.drawWireframe();
+	this->mesh.draw();
 
 	this->cam.end();
 
@@ -122,21 +110,6 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
-
-//--------------------------------------------------------------
-glm::vec3 ofApp::make_point(float R, float r, float u, float v) {
-
-	// 数学デッサン教室 描いて楽しむ数学たち　P.31
-
-	u *= DEG_TO_RAD;
-	v *= DEG_TO_RAD;
-
-	auto x = (R + r * cos(u)) * cos(v);
-	auto y = (R + r * cos(u)) * sin(v);
-	auto z = r * sin(u);
-
-	return glm::vec3(x, y, z);
 }
 
 //--------------------------------------------------------------
