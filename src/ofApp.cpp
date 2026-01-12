@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	ofNoFill();
@@ -49,9 +49,9 @@ void ofApp::update() {
 				}
 
 				glm::vec3 noise_location = glm::vec4(x, y, len * 0.5, 0) * rotation;
-				auto noise_value = ofNoise(noise_location.x * 0.012, noise_location.y * 0.012, noise_location.z * 0.012, ofGetFrameNum() * 0.001);
+				auto noise_value = ofNoise(noise_location.x * 0.01, noise_location.y * 0.01, noise_location.z * 0.01, ofGetFrameNum() * 0.025);
 
-				if (noise_value < 0.4 || noise_value > 0.5) {
+				if (noise_value <= 0.4 || noise_value >= 0.6) {
 
 					continue;
 				}
@@ -69,13 +69,21 @@ void ofApp::update() {
 
 				for (int i = 0; i < 4; i++) {
 
-					if (noise_value > 0.44 && noise_value < 0.46) {
+					if (noise_value > 0.4 && noise_value < 0.6) {
 
-						this->mesh.addColor(ofColor(239, 39, 39));
-					}
-					else {
+						auto p = abs(0.5 - noise_value);
+						if (p < 0.01) {
 
-						this->mesh.addColor(ofColor(0));
+							this->mesh.addColor(ofColor(255));
+						}
+						else {
+
+							this->mesh.addColor(ofColor(
+								ofMap(p, 0.01, 0.1, 255, 39),
+								ofMap(p, 0.01, 0.1, 100, 39),
+								ofMap(p, 0.01, 0.1, 255, 39)
+							));
+						}
 					}
 				}
 			}
@@ -87,8 +95,9 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 1.44);
-	ofRotateX(ofGetFrameNum() * 2.88);
+
+	ofRotateY(ofGetFrameNum() * 0.72);
+	ofRotateX(ofGetFrameNum() * 1.44);
 
 	this->mesh.draw();
 
