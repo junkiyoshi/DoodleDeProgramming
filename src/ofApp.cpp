@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -24,10 +25,12 @@ void ofApp::update() {
 	float noise_threshold_2 = 0.52;
 	float noise_span = 1.2;
 
-	ofColor line_color(239);
-	ofColor face_color(39);
+	ofColor line_color, face_color;
 
-	for (float radius = 230; radius > 210; radius -= 2) {
+	for (float radius = 270; radius >= 230; radius -= 20) {
+
+		line_color.setHsb(ofMap(radius, 270, 210, 0, 255), 255, 255);
+		face_color.setHsb(ofMap(radius, 270, 210, 0, 255), 255, 255, 64);
 
 		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
@@ -37,7 +40,7 @@ void ofApp::update() {
 					cos(phi_deg * DEG_TO_RAD) * noise_span,
 					sin(phi_deg * DEG_TO_RAD) * noise_span,
 					cos(theta_deg * DEG_TO_RAD) * noise_span,
-					radius * 0.025 + ofGetFrameNum() * 0.02);
+					radius * 0.25 + ofGetFrameNum() * 0.01);
 
 				if (noise_value < noise_threshold_1 || noise_value > noise_threshold_2) { continue; }
 
@@ -45,22 +48,22 @@ void ofApp::update() {
 					cos(phi_deg * DEG_TO_RAD) * noise_span,
 					sin(phi_deg * DEG_TO_RAD) * noise_span,
 					cos((theta_deg - theta_deg_step) * DEG_TO_RAD) * noise_span,
-					radius * 0.025 + ofGetFrameNum() * 0.02);
+					radius * 0.25 + ofGetFrameNum() * 0.01);
 				auto noise_value_2 = ofNoise(
 					cos((phi_deg + phi_deg_step) * DEG_TO_RAD) * noise_span,
 					sin((phi_deg + phi_deg_step) * DEG_TO_RAD) * noise_span,
 					cos(theta_deg * DEG_TO_RAD) * noise_span,
-					radius * 0.025 + ofGetFrameNum() * 0.02);
+					radius * 0.25 + ofGetFrameNum() * 0.01);
 				auto noise_value_3 = ofNoise(
 					cos((phi_deg - phi_deg_step) * DEG_TO_RAD) * noise_span,
 					sin((phi_deg - phi_deg_step) * DEG_TO_RAD) * noise_span,
 					cos(theta_deg * DEG_TO_RAD) * noise_span,
-					radius * 0.025 + ofGetFrameNum() * 0.02);
+					radius * 0.25 + ofGetFrameNum() * 0.01);
 				auto noise_value_4 = ofNoise(
 					cos(phi_deg * DEG_TO_RAD) * noise_span,
 					sin(phi_deg * DEG_TO_RAD) * noise_span,
 					cos((theta_deg + theta_deg_step) * DEG_TO_RAD) * noise_span,
-					radius * 0.025 + ofGetFrameNum() * 0.02);
+					radius * 0.25 + ofGetFrameNum() * 0.01);
 
 				auto index = this->face.getNumVertices();
 				vector<glm::vec3> vertices;
