@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
@@ -28,19 +29,21 @@ void ofApp::update() {
 		}
 	}
 
-	for (int i = 0; i < 15; i++) {
+	ofColor color;
+	for (int i = 0; i < 6; i++) {
 
 		int random_deg = ofRandom(360);
-		random_deg = random_deg / 5 * 5;
 		int random_radius = 250 + ofRandom(-60, 60);
-		random_radius = random_radius / 15 * 15;
+		random_radius = random_radius / 30 * 30;
+
+		color.setHsb(ofMap(random_deg, 0, 360, 0, 255), ofMap(random_radius, 190, 310, 255, 0), 255);
 
 		auto location = glm::vec2(random_radius * cos(random_deg * DEG_TO_RAD), random_radius * sin(random_deg * DEG_TO_RAD));
 		this->location_list.push_back(location);
 		this->radius_list.push_back(1);
-		this->speed_list.push_back(ofRandom(0.1, 0.5));
+		this->speed_list.push_back(ofRandom(0.1, 0.2));
 		this->max_radius_list.push_back(10);
-		this->color_list.push_back(ofColor(39));
+		this->color_list.push_back(color);
 	}
 
 	this->line.clear();
@@ -88,7 +91,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 100;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
