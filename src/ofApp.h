@@ -18,11 +18,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	vector<glm::vec2> location_list;
-	vector<float> radius_list;
-	vector<float> speed_list;
-	vector<float> max_radius_list;
-	vector<ofColor> color_list;
+	glm::vec3 make_point(float R, float r, float u, float v);
 
-	ofMesh line;
+	ofEasyCam cam;
 };
