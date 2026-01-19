@@ -1,95 +1,38 @@
-#include "ofApp.h"
+#include "ofApp.h"	
 
 //--------------------------------------------------------------
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(2);
-	ofEnableDepthTest();
+	ofBackground(239);
+	ofSetColor(39);
+
+	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 13, true, true, true);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateZ(ofGetFrameNum() * 0.72);
+	for (int x = 0; x < ofGetWidth(); x += 15) {
 
-	int v_span = 6;
-	int u_span = 90;
-	int R = 200;
+		for (int y = 15; y <= ofGetHeight(); y += 15) {
 
-	ofMesh face, line;
-	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+			char noise_value = ofMap(ofNoise(x * 0.005, y * 0.005, ofGetFrameNum() * 0.02), 0, 1, 'a' - 3, 'c' + 3);
+			if (noise_value >= 'a' && noise_value <= 'c') {
 
-	ofColor color;
-
-	float noise_seed = ofRandom(1000);
-	for (int v = 0; v <= 360; v += v_span) {
-
-		color.setHsb((int)ofMap(v, 0, 360, 0, 255), 120, 255);
-
-		int u_start = ofMap(ofNoise(noise_seed, cos(v * DEG_TO_RAD) * 0.5, sin(v * DEG_TO_RAD) * 0.5, ofGetFrameNum() * 0.015), 0, 1, -360, 360);
-		int next_u = u_start;
-
-		int r = 60;
-
-		for (int u = u_start; u < u_start + 360; u += u_span) {
-
-			face.addVertex(this->make_point(R, r, u, v));
-			face.addVertex(this->make_point(R, r, u + u_span, v));
-			face.addVertex(this->make_point(R, r, next_u + u_span, v + v_span * 0.95));
-			face.addVertex(this->make_point(R, r, next_u, v + v_span * 0.95));
-
-			line.addVertex(this->make_point(R, r, u, v));
-			line.addVertex(this->make_point(R, r, u + u_span, v));
-			line.addVertex(this->make_point(R, r, next_u + u_span, v + v_span * 0.95));
-			line.addVertex(this->make_point(R, r, next_u, v + v_span * 0.95));
-
-			ofColor face_color = ofColor(0);
-			ofColor line_color = color;
-
-			face.addColor(face_color);
-			face.addColor(face_color);
-			face.addColor(face_color);
-			face.addColor(face_color);
-
-			line.addColor(line_color);
-			line.addColor(line_color);
-			line.addColor(line_color);
-			line.addColor(line_color);
-
-			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
-			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 3); face.addIndex(face.getNumVertices() - 4);
-
-			line.addIndex(line.getNumVertices() - 1); line.addIndex(line.getNumVertices() - 4);
-			line.addIndex(line.getNumVertices() - 2); line.addIndex(line.getNumVertices() - 3);
-
-			line.addIndex(line.getNumVertices() - 1); line.addIndex(line.getNumVertices() - 2);
-			line.addIndex(line.getNumVertices() - 3); line.addIndex(line.getNumVertices() - 4);
-
-			if (v > 0) {
-
-				line.addIndex(line.getNumVertices() - 4); line.addIndex(line.getNumVertices() - 17);
+				this->font.drawString({ noise_value }, x, y);
 			}
-
-			next_u += u_span;
 		}
 	}
 
-	face.drawFaces();
-	line.drawWireframe();
-
-	this->cam.end();
-
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -104,21 +47,7 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
-}
-
-//--------------------------------------------------------------
-glm::vec3 ofApp::make_point(float R, float r, float u, float v) {
-
-	// 数学デッサン教室 描いて楽しむ数学たち　P.31
-
-	u *= DEG_TO_RAD;
-	v *= DEG_TO_RAD;
-
-	auto x = (R + r * cos(u)) * cos(v);
-	auto y = (R + r * cos(u)) * sin(v);
-	auto z = r * sin(u);
-
-	return glm::vec3(x, y, z);
+	*/
 }
 
 //--------------------------------------------------------------
