@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(39);
+	ofBackground(39);
 
 	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 13, true, true, true);
 }
@@ -24,10 +23,27 @@ void ofApp::draw() {
 
 		for (int y = 15; y <= ofGetHeight(); y += 15) {
 
-			char noise_value = ofMap(ofNoise(x * 0.005, y * 0.005, ofGetFrameNum() * 0.02), 0, 1, 'a' - 3, 'c' + 3);
-			if (noise_value >= 'a' && noise_value <= 'c') {
+			auto noise_value = ofNoise(x * 0.0035, y * 0.0035, ofGetFrameNum() * 0.007);
 
-				this->font.drawString({ noise_value }, x, y);
+			if (noise_value > 0.1 && noise_value <= 0.3) {
+
+				ofSetColor(239, 139, 139);
+				char c = ofMap(noise_value, 0.1, 0.3, 'a', 'c');
+				this->font.drawString({ c }, x, y);
+
+			}
+			else if (noise_value > 0.4 && noise_value <= 0.6) {
+
+				ofSetColor(139, 239, 139);
+				char c = ofMap(noise_value, 0.4, 0.5, 'n', 'o');
+				this->font.drawString({ c }, x, y);
+
+			}
+			else if (noise_value > 0.7 && noise_value <= 0.9) {
+
+				ofSetColor(139, 139, 239);
+				char c = ofMap(noise_value, 0.7, 0.9, 'x', 'z');
+				this->font.drawString({ c }, x, y);
 			}
 		}
 	}
