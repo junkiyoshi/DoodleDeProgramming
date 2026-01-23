@@ -6,8 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(3);
+	ofBackground(239);
+	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -23,184 +23,77 @@ void ofApp::update() {
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 0.25;
-	float theta_deg_step = 0.25;
-	float threshold = 0.5;
+	float threshold_1 = 0.46;
+	float threshold_2 = 0.54;
+	float deg_span = 0.25;
+	float z_span = 1;
+
 	float noise_span = 0.005;
+	float noise_radius = 300;
 
-	float R = 200;
-	float base_r = R * 0.25;
+	for(float radius = 280; radius <= 320; radius += 20){
 
-	float r = ofGetFrameNum() % 50 < 25 ? ofMap(ofGetFrameNum() % 50, 0, 25, R * 0.2, R * 0.4) : ofMap(ofGetFrameNum() % 50, 25, 50, R * 0.4, R * 0.2);
+		for (float deg = 0; deg < 360; deg += deg_span) {
 
-	ofColor face_color = ofColor(239);
-	ofColor line_color = ofColor(239, 139, 139);
+			for (float z = -300; z < 4096; z += z_span) {
 
-	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
+				auto noise_value = ofNoise(glm::vec4(radius * 0.0085, noise_radius * cos(deg * DEG_TO_RAD) * noise_span, noise_radius * sin(deg * DEG_TO_RAD) * noise_span, z * noise_span + ofGetFrameNum() * 0.075));
+				if (noise_value <= threshold_1 || noise_value >= threshold_2) { continue; }
 
-		for (float theta_deg = 0; theta_deg < 360; theta_deg += theta_deg_step) {
+				auto noise_1 = ofNoise(glm::vec4(radius * 0.0085, noise_radius * cos((deg - deg_span) * DEG_TO_RAD) * noise_span, noise_radius * sin((deg - deg_span) * DEG_TO_RAD) * noise_span, z * noise_span + ofGetFrameNum() * 0.075));
+				auto noise_2 = ofNoise(glm::vec4(radius * 0.0085, noise_radius * cos(deg * DEG_TO_RAD) * noise_span, noise_radius * sin(deg * DEG_TO_RAD) * noise_span, (z + z_span) * noise_span + ofGetFrameNum() * 0.075));
+				auto noise_3 = ofNoise(glm::vec4(radius * 0.0085, noise_radius * cos(deg * DEG_TO_RAD) * noise_span, noise_radius * sin(deg * DEG_TO_RAD) * noise_span, (z - z_span) * noise_span + ofGetFrameNum() * 0.075));
+				auto noise_4 = ofNoise(glm::vec4(radius * 0.0085, noise_radius * cos((deg + deg_span) * DEG_TO_RAD) * noise_span, noise_radius * sin((deg + deg_span) * DEG_TO_RAD) * noise_span, z * noise_span + ofGetFrameNum() * 0.075));
 
-			auto noise_value = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
-			if (noise_value <= threshold) { continue; }
+				auto index = this->face.getNumVertices();
+				vector<glm::vec3> vertices;
 
-			auto noise_1 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg - theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_2 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg + phi_deg_step) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_3 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg - phi_deg_step) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_4 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg + theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
+				vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
 
-			auto index = this->face.getNumVertices();
-			vector<glm::vec3> vertices;
+				this->face.addVertices(vertices);
 
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
+				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
 
-			this->face.addVertices(vertices);
+				if (noise_1 <= threshold_1 || noise_1 >= threshold_2) {
 
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
+					this->line.addVertex(vertices[0]);
+					this->line.addVertex(vertices[2]);
 
-			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+				}
 
-			if (noise_1 <= threshold) {
+				if (noise_2 <= threshold_1 || noise_2 >= threshold_2) {
 
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[2]);
+					this->line.addVertex(vertices[2]);
+					this->line.addVertex(vertices[3]);
 
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+				}
 
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
+				if (noise_3 <= threshold_1 || noise_3 >= threshold_2) {
 
-			if (noise_2 <= threshold) {
+					this->line.addVertex(vertices[0]);
+					this->line.addVertex(vertices[1]);
 
-				this->line.addVertex(vertices[2]);
-				this->line.addVertex(vertices[3]);
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+				}
 
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
+				if (noise_4 <= threshold_1 || noise_4 >= threshold_2) {
 
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
+					this->line.addVertex(vertices[1]);
+					this->line.addVertex(vertices[3]);
 
-			if (noise_3 <= threshold) {
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
 
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[1]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_4 <= threshold) {
-
-				this->line.addVertex(vertices[1]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-
-			}
-		}
-	}
-
-	r = ofGetFrameNum() % 50 < 25 ? ofMap(ofGetFrameNum() % 50, 0, 25, R * 0.4, R * 0.2) : ofMap(ofGetFrameNum() % 50, 25, 50, R * 0.2, R * 0.4);
-
-	face_color = ofColor(239, 139, 139);
-	line_color = ofColor(239);
-
-	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
-
-		for (float theta_deg = 0; theta_deg < 360; theta_deg += theta_deg_step) {
-
-			auto noise_value = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
-			if (noise_value >= threshold) { continue; }
-
-			auto noise_1 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg - theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_2 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg + phi_deg_step) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_3 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg - phi_deg_step) * noise_span, ofGetFrameNum() * 0.025));
-			auto noise_4 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg + theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.025));
-
-			auto index = this->face.getNumVertices();
-			vector<glm::vec3> vertices;
-
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
-
-			this->face.addVertices(vertices);
-
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-
-			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
-
-			if (noise_1 >= threshold) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[2]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_2 >= threshold) {
-
-				this->line.addVertex(vertices[2]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_3 >= threshold) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[1]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_4 >= threshold) {
-
-				this->line.addVertex(vertices[1]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-
-
+				}
 			}
 		}
 	}
@@ -210,12 +103,13 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(270 + 45);
+	ofRotateY(180);
 
+	ofSetColor(239);
 	this->line.draw();
-	this->face.draw();
 
-	this->cam.end();
+	ofSetColor(0);
+	this->face.draw();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -233,23 +127,9 @@ void ofApp::draw() {
 		}
 	}
 	*/
+
+	this->cam.end();
 }
-
-//--------------------------------------------------------------
-glm::vec3 ofApp::make_point(float R, float r, float u, float v) {
-
-	// 数学デッサン教室 描いて楽しむ数学たち　P.31
-
-	u *= DEG_TO_RAD;
-	v *= DEG_TO_RAD;
-
-	auto x = (R + r * cos(u)) * cos(v);
-	auto y = (R + r * cos(u)) * sin(v);
-	auto z = r * sin(u);
-
-	return glm::vec3(x, y, z);
-}
-
 
 //--------------------------------------------------------------
 int main() {
