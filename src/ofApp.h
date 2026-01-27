@@ -18,6 +18,6 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	ofTrueTypeFont font;
-	string word;
+	ofEasyCam cam;
+	ofMesh face, frame;
 };

@@ -1,4 +1,4 @@
-#include "ofApp.h"	
+#include "ofApp.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,63 +6,140 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
+	ofBackground(239);
+	//ofSetLineWidth(2);
+	ofEnableDepthTest();
 
-	this->font.loadFont("fonts/msgothic.ttc", 28, true, true, true);
-	this->word = "junkiyoshi.com ";
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	ofSeedRandom(39);
 
+	this->face.clear();
+	this->frame.clear();
+
+	int theta = 90;
+	int radius_span = 10;
+	for (int base_x = -430; base_x < 430; base_x += 860) {
+
+		for (int radius = 30; radius <= 360; radius += radius_span) {
+
+			auto noise_value = ofNoise(radius * 0.002 - ofGetFrameNum() * 0.015);
+			float angle;
+			glm::highp_mat4 rotation;
+			auto face_color = ofColor(0);
+			auto frame_color = ofColor(0);
+
+			if (noise_value < 0.55) {
+
+				angle = ofMap(noise_value, 0, 0.55, -PI * 2, PI * 2);
+				rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
+				frame_color.setHsb(ofMap(radius, 30, 360, 0, 255), 100, 255);
+			}
+
+			for (int phi = 0; phi < 360; phi += 3) {
+
+				auto index = this->face.getNumVertices();
+				vector<glm::vec3> vertices;
+
+				vertices.push_back(glm::vec3(
+					radius * cos(phi * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * sin(phi * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * cos((theta + 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					radius * cos((phi + 3) * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * sin((phi + 3) * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * cos((theta + 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					radius * cos((phi + 3) * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * sin((phi + 3) * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * cos((theta - 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					radius * cos(phi * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * sin(phi * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * cos((theta - 3) * DEG_TO_RAD)
+				));
+
+				vertices.push_back(glm::vec3(
+					(radius - radius_span) * cos(phi * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					(radius - radius_span) * sin(phi * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * cos((theta + 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					(radius - radius_span) * cos((phi + 3) * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					(radius - radius_span) * sin((phi + 3) * DEG_TO_RAD) * sin((theta + 1) * DEG_TO_RAD),
+					radius * cos((theta + 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					(radius - radius_span) * cos((phi + 3) * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					(radius - radius_span) * sin((phi + 3) * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * cos((theta - 3) * DEG_TO_RAD)
+				));
+				vertices.push_back(glm::vec3(
+					(radius - radius_span) * cos(phi * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					(radius - radius_span) * sin(phi * DEG_TO_RAD) * sin((theta - 1) * DEG_TO_RAD),
+					radius * cos((theta - 3) * DEG_TO_RAD)
+				));
+
+				for (auto& vertex : vertices) {
+
+					vertex += glm::vec3(base_x, 0, 0);
+					vertex = glm::vec4(vertex, 0) * rotation;
+				}
+
+				auto frame_index = this->frame.getNumVertices();
+
+				this->face.addVertices(vertices);
+				this->frame.addVertices(vertices);
+
+				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 2);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
+
+				this->face.addIndex(index + 4); this->face.addIndex(index + 5); this->face.addIndex(index + 6);
+				this->face.addIndex(index + 4); this->face.addIndex(index + 6); this->face.addIndex(index + 7);
+
+				this->face.addIndex(index + 0); this->face.addIndex(index + 4); this->face.addIndex(index + 5);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 5); this->face.addIndex(index + 1);
+
+				this->face.addIndex(index + 2); this->face.addIndex(index + 6); this->face.addIndex(index + 7);
+				this->face.addIndex(index + 2); this->face.addIndex(index + 7); this->face.addIndex(index + 3);
+
+				this->frame.addIndex(index + 0); this->frame.addIndex(index + 1);
+				this->frame.addIndex(index + 2); this->frame.addIndex(index + 3);
+
+				this->frame.addIndex(index + 4); this->frame.addIndex(index + 5);
+				this->frame.addIndex(index + 6); this->frame.addIndex(index + 7);
+
+				for (int i = 0; i < vertices.size(); i++) {
+
+					this->face.addColor(face_color);
+					this->frame.addColor(frame_color);
+				}
+			}
+		}
+	}
 }
+
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	int span = 33;
-	ofColor color;
-	for (int y = 0; y < ofGetWindowHeight() + 33; y += span) {
+	this->cam.begin();
 
-		int x_start = ofMap(ofNoise(y * 0.1, ofGetFrameNum() * 0.005), 0, 1, 0, 1000);
+	this->face.draw();
+	this->frame.drawWireframe();
 
-		for (int i = 0; i < this->word.size() * 2; i++) {
-
-			color.setHsb((int)(ofMap(y, 0, ofGetWindowHeight() + 33, 0, 255) + ofGetFrameNum() * 10) % 255, 100, 255);
-
-			auto x = (int)(x_start + i * span) % 1000 - 100;
-			auto location = glm::vec2(x, y);
-
-			ofPushMatrix();
-			ofTranslate(location);
-
-			ofPath chara_path = this->font.getCharacterAsPoints(this->word[i % this->word.size()], true, false);
-			vector<ofPolyline> outline = chara_path.getOutline();
-
-			ofNoFill();
-			ofSetColor(color);
-			ofBeginShape();
-			for (int outline_index = 0; outline_index < outline.size(); outline_index++) {
-
-				ofNextContour(true);
-
-				auto vertices = outline[outline_index].getVertices();
-				for (auto& vertex : vertices) {
-
-					ofVertex(vertex);
-				}
-			}
-			ofEndShape(true);
-
-			ofPopMatrix();
-		}
-	}
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 100;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
