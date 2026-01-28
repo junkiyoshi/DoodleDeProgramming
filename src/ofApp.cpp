@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	//ofSetLineWidth(2);
 	ofEnableDepthTest();
 
@@ -22,23 +22,19 @@ void ofApp::update() {
 	this->frame.clear();
 
 	int theta = 90;
-	int radius_span = 10;
+	int radius_span = 5;
+	ofColor face_color(0);
+	ofColor frame_color(239);
 	for (int base_x = -430; base_x < 430; base_x += 860) {
 
 		for (int radius = 30; radius <= 360; radius += radius_span) {
 
-			auto noise_value = ofNoise(radius * 0.002 - ofGetFrameNum() * 0.015);
+			auto noise_value = ofNoise(radius * 0.0025 - ofGetFrameNum() * 0.015);
 			float angle;
 			glm::highp_mat4 rotation;
-			auto face_color = ofColor(0);
-			auto frame_color = ofColor(0);
 
-			if (noise_value < 0.55) {
-
-				angle = ofMap(noise_value, 0, 0.55, -PI * 2, PI * 2);
-				rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
-				frame_color.setHsb(ofMap(radius, 30, 360, 0, 255), 100, 255);
-			}
+			angle = ofMap(noise_value, 0, 1, -PI * 4, PI * 4);
+			rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
 
 			for (int phi = 0; phi < 360; phi += 3) {
 
