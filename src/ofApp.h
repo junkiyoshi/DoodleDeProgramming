@@ -20,10 +20,10 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void draw_digital(glm::vec3 location, int number_index);
-	void draw_hexagon(glm::vec3 location, float deg);
+	void draw_digital(glm::vec3 location, int number_index, ofColor color);
+	void draw_hexagon(glm::vec3 location, float deg, ofColor color);
 
-	vector<pair<glm::vec3, int>> number_list;
+	vector<std::tuple<glm::vec3, int, ofColor>> number_list;
 
 	float hexagon_height;
 	float hexagon_width;

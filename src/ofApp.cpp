@@ -6,16 +6,21 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->hexagon_height = 64;
 	this->hexagon_width = 15;
 
-	for (float z = -400; z <= 400; z += 80) {
+	ofColor color;
+	for (float x = -300; x <= 300; x += 100) {
 
-		this->number_list.push_back(std::make_pair(glm::vec3(0, 0, z), 0));
+		for (float z = -200; z <= 200; z += 40) {
+
+			color.setHsb(ofMap(x, -300, 300, 0, 255), 255, 255);
+			this->number_list.push_back(std::make_tuple(glm::vec3(x, 0, z), 0, color));
+		}
 	}
 }
 
@@ -35,7 +40,7 @@ void ofApp::draw() {
 	for (auto& number : this->number_list) {
 
 		int number_index = int(ofGetFrameNum() * 0.1 + i++) % 10;
-		this->draw_digital(number.first, number_index);
+		this->draw_digital(std::get<0>(number), number_index, std::get<2>(number));
 	}
 
 	this->cam.end();
@@ -59,7 +64,7 @@ void ofApp::draw() {
 }
 
 //--------------------------------------------------------------
-void ofApp::draw_digital(glm::vec3 location, int number_index) {
+void ofApp::draw_digital(glm::vec3 location, int number_index, ofColor color) {
 
 	vector<pair<glm::vec3, float>> part_list = {
 		std::make_pair<glm::vec3, float>(location + glm::vec2(0, -this->hexagon_height), 90),
@@ -86,12 +91,12 @@ void ofApp::draw_digital(glm::vec3 location, int number_index) {
 
 	for (auto& index : index_list[number_index]) {
 
-		this->draw_hexagon(part_list[index].first, part_list[index].second);
+		this->draw_hexagon(part_list[index].first, part_list[index].second, color);
 	}
 }
 
 //--------------------------------------------------------------
-void ofApp::draw_hexagon(glm::vec3 location, float deg) {
+void ofApp::draw_hexagon(glm::vec3 location, float deg, ofColor color) {
 
 	ofPushMatrix();
 	ofTranslate(location);
@@ -106,14 +111,14 @@ void ofApp::draw_hexagon(glm::vec3 location, float deg) {
 	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
 
 	ofFill();
-	ofSetColor(0, ofMap(location.z, -200, 200, 255, 0));
+	ofSetColor(color, ofMap(location.z, -200, 200, 255, 0));
 
 	ofBeginShape();
 	ofVertices(vertices);
 	ofEndShape(true);
 
 	ofNoFill();
-	ofSetColor(255, ofMap(location.z, -200, 200, 255, 0));
+	location.z == -200 ? ofSetColor(255) : ofSetColor(color);
 
 	ofBeginShape();
 	ofVertices(vertices);
