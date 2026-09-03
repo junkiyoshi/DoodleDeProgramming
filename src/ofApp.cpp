@@ -6,22 +6,9 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofSetLineWidth(2);
+	ofBackground(239);
+	ofSetLineWidth(1.25);
 	ofEnableDepthTest();
-
-	this->hexagon_height = 64;
-	this->hexagon_width = 15;
-
-	ofColor color;
-	for (float x = -300; x <= 300; x += 100) {
-
-		for (float z = -200; z <= 200; z += 40) {
-
-			color.setHsb(ofMap(x, -300, 300, 0, 255), 255, 255);
-			this->number_list.push_back(std::make_tuple(glm::vec3(x, 0, z), 0, color));
-		}
-	}
 }
 
 //--------------------------------------------------------------
@@ -33,15 +20,59 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(180);
-	ofRotateZ(180);
+	ofRotateX(360 - 60);
 
-	int i = 0;
-	for (auto& number : this->number_list) {
+	float R = 200;
+	float r = 50;
+	float u_span = 10;
 
-		int number_index = int(ofGetFrameNum() * 0.1 + i++) % 10;
-		this->draw_digital(std::get<0>(number), number_index, std::get<2>(number));
+	ofMesh face, line;
+	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+
+	for (int r = 60; r > 0; r -= 5) {
+
+		int v_start = ofMap(ofNoise(r * 0.005 + ofGetFrameNum() * 0.025), 0, 1, -720, 720);
+		int v_end = v_start + 5;
+		int v_span = 2;
+
+		for (int v = v_start; v <= v_end; v += v_span) {
+
+			for (int u = 0; u < 360; u += u_span) {
+
+				face.addVertex(this->make_point(R, r, u - u_span * 0.5, v - v_span * 0.5));
+				face.addVertex(this->make_point(R, r, u + u_span * 0.5, v - v_span * 0.5));
+				face.addVertex(this->make_point(R, r, u + u_span * 0.5, v + v_span * 0.5));
+				face.addVertex(this->make_point(R, r, u - u_span * 0.5, v + v_span * 0.5));
+
+				line.addVertex(this->make_point(R, r, u - u_span * 0.5, v - v_span * 0.5));
+				line.addVertex(this->make_point(R, r, u + u_span * 0.5, v - v_span * 0.5));
+				line.addVertex(this->make_point(R, r, u + u_span * 0.5, v + v_span * 0.5));
+				line.addVertex(this->make_point(R, r, u - u_span * 0.5, v + v_span * 0.5));
+
+				for (int i = 0; i < 4; i++) {
+
+					face.addColor(ofColor(0));
+					line.addColor(ofColor(239));
+				}
+
+				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
+				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 3); face.addIndex(face.getNumVertices() - 4);
+
+				if (v == v_start) {
+
+					line.addIndex(line.getNumVertices() - 3); line.addIndex(line.getNumVertices() - 4);
+				}
+
+				if (v == v_end) {
+
+					line.addIndex(line.getNumVertices() - 1); line.addIndex(line.getNumVertices() - 2);
+				}
+			}
+		}
 	}
+
+	face.draw();
+	line.drawWireframe();
 
 	this->cam.end();
 
@@ -64,67 +95,18 @@ void ofApp::draw() {
 }
 
 //--------------------------------------------------------------
-void ofApp::draw_digital(glm::vec3 location, int number_index, ofColor color) {
+glm::vec3 ofApp::make_point(float R, float r, float u, float v) {
 
-	vector<pair<glm::vec3, float>> part_list = {
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, -this->hexagon_height), 90),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * 0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * 0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, 0), 90),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * -0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * -0.5), 0),
-		std::make_pair<glm::vec3, float>(location + glm::vec2(0, this->hexagon_height), 90)
-	};
+	// 数学デッサン教室 描いて楽しむ数学たち　P.31
 
-	vector<vector<int>> index_list = {
-		{ 0, 1, 2, 4, 5, 6 },
-		{ 2, 5 },
-		{ 0, 1, 3, 5, 6 },
-		{ 0, 2, 3, 5, 6 },
-		{ 2, 3, 4, 5 },
-		{ 0, 2, 3, 4, 6 },
-		{ 0, 1, 2, 3, 4, 6 },
-		{ 0, 2, 5 },
-		{ 0, 1, 2, 3, 4, 5, 6 },
-		{ 0, 2, 3, 4, 5, 6 },
-	};
+	u *= DEG_TO_RAD;
+	v *= DEG_TO_RAD;
 
-	for (auto& index : index_list[number_index]) {
+	auto x = (R + r * cos(u)) * cos(v);
+	auto y = (R + r * cos(u)) * sin(v);
+	auto z = r * sin(u);
 
-		this->draw_hexagon(part_list[index].first, part_list[index].second, color);
-	}
-}
-
-//--------------------------------------------------------------
-void ofApp::draw_hexagon(glm::vec3 location, float deg, ofColor color) {
-
-	ofPushMatrix();
-	ofTranslate(location);
-	ofRotate(deg);
-
-	vector<glm::vec2> vertices;
-	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * -0.4));
-	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * 0.4));
-	vertices.push_back(glm::vec2(0, this->hexagon_height * 0.5));
-	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * 0.4));
-	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * -0.4));
-	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
-
-	ofFill();
-	ofSetColor(color, ofMap(location.z, -200, 200, 255, 0));
-
-	ofBeginShape();
-	ofVertices(vertices);
-	ofEndShape(true);
-
-	ofNoFill();
-	location.z == -200 ? ofSetColor(255) : ofSetColor(color);
-
-	ofBeginShape();
-	ofVertices(vertices);
-	ofEndShape(true);
-
-	ofPopMatrix();
+	return glm::vec3(x, y, z);
 }
 
 //--------------------------------------------------------------

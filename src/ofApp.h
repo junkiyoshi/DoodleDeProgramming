@@ -14,19 +14,11 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
-	void mouseEntered(int x, int y) {};
-	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void draw_digital(glm::vec3 location, int number_index, ofColor color);
-	void draw_hexagon(glm::vec3 location, float deg, ofColor color);
-
-	vector<std::tuple<glm::vec3, int, ofColor>> number_list;
-
-	float hexagon_height;
-	float hexagon_width;
+	glm::vec3 make_point(float R, float r, float u, float v);
 
 	ofEasyCam cam;
 };
