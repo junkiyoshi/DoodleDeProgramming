@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(1.25);
 	ofEnableDepthTest();
 }
@@ -29,10 +29,11 @@ void ofApp::draw() {
 	ofMesh face, line;
 	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	for (int r = 60; r > 0; r -= 5) {
+	ofColor face_color, line_color;
+	for (int r = 45; r > 0; r -= 5) {
 
 		int v_start = ofMap(ofNoise(r * 0.005 + ofGetFrameNum() * 0.025), 0, 1, -720, 720);
-		int v_end = v_start + 5;
+		int v_end = v_start + 180;
 		int v_span = 2;
 
 		for (int v = v_start; v <= v_end; v += v_span) {
@@ -49,10 +50,13 @@ void ofApp::draw() {
 				line.addVertex(this->make_point(R, r, u + u_span * 0.5, v + v_span * 0.5));
 				line.addVertex(this->make_point(R, r, u - u_span * 0.5, v + v_span * 0.5));
 
+				face_color.setHsb(ofMap(r, 0, 45, 0, 255), 168, 255);
+				line_color.setHsb(ofMap(r, 0, 45, 0, 255), 0, 255);
+
 				for (int i = 0; i < 4; i++) {
 
-					face.addColor(ofColor(0));
-					line.addColor(ofColor(239));
+					face.addColor(face_color);
+					line.addColor(line_color);
 				}
 
 				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
