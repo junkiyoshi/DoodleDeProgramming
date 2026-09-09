@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(2);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	auto ico_sphere = ofIcoSpherePrimitive(300, 4);
@@ -28,19 +27,19 @@ void ofApp::update() {
 	for (int i = 0; i < this->triangle_list.size(); i++) {
 
 		glm::vec3 avg = (this->triangle_list[i].getVertex(0) + this->triangle_list[i].getVertex(1) + this->triangle_list[i].getVertex(2)) / 3;
-		auto noise_value = ofNoise(avg.x * 0.01, avg.y * 0.01, avg.z * 0.01 + ofGetFrameNum() * 0.01);
+		auto noise_value = ofNoise(avg.x * 0.01, avg.y * 0.01, avg.z * 0.01 + ofGetFrameNum() * 0.002);
 		glm::highp_dmat4 rotation_x, rotation_y, rotation_z;
 
-		if (noise_value < 0.4) {
+		if (noise_value < 0.55) {
 
 			auto angle = 0.f;
-			if (noise_value < 0.35) {
+			if (noise_value < 0.5) {
 
-				angle = ofMap(noise_value, 0, 0.35, PI * 2, PI);
+				angle = ofMap(noise_value, 0, 0.5, PI * 2, PI);
 			}
 			else {
 
-				angle = ofMap(noise_value, 0.35, 0.4, PI, 0);
+				angle = ofMap(noise_value, 0.5, 0.55, PI, 0);
 			}
 
 			rotation_x = glm::rotate(glm::mat4(), angle, glm::vec3(1, 0, 0));
@@ -56,20 +55,21 @@ void ofApp::update() {
 
 		vector<glm::vec3> vertices;
 
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(0)) * (radius + 2) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * (radius + 2) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * (radius + 2) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(0)) * (radius + 1) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * (radius + 1) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * (radius + 1) - avg);
 
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(0)) * (radius - 2) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * (radius - 2) - avg);
-		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * (radius - 2) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(0)) * (radius - 1) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(1)) * (radius - 1) - avg);
+		vertices.push_back(glm::normalize(this->triangle_list[i].getVertex(2)) * (radius - 1) - avg);
 
 		for (auto& vertex : vertices) {
 
 			vertex = glm::vec4(vertex, 0) * rotation_z * rotation_y * rotation_x;
-			if (noise_value < 0.4) {
+			if (noise_value < 0.55) {
 
-				vertex += glm::normalize(avg) * ofMap(noise_value, 0, 0.4, radius * 1.5, radius);
+				vertex *= ofMap(noise_value, 0, 0.55, 0.01, 1);
+				vertex += glm::normalize(avg) * ofMap(noise_value, 0, 0.55, radius * 0.15, radius);
 			}
 			else {
 
@@ -80,17 +80,17 @@ void ofApp::update() {
 		this->mesh.addVertices(vertices);
 		this->frame.addVertices(vertices);
 
-		this->mesh.addColor(ofColor(239));
-		this->mesh.addColor(ofColor(239));
-		this->mesh.addColor(ofColor(239));
-
 		this->mesh.addColor(ofColor(39));
 		this->mesh.addColor(ofColor(39));
 		this->mesh.addColor(ofColor(39));
 
-		this->frame.addColor(ofColor(39));
-		this->frame.addColor(ofColor(39));
-		this->frame.addColor(ofColor(39));
+		this->mesh.addColor(ofColor(39));
+		this->mesh.addColor(ofColor(39));
+		this->mesh.addColor(ofColor(39));
+
+		this->frame.addColor(ofColor(239));
+		this->frame.addColor(ofColor(239));
+		this->frame.addColor(ofColor(239));
 
 		this->frame.addColor(ofColor(239));
 		this->frame.addColor(ofColor(239));
@@ -126,7 +126,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 0.36);
+	ofRotateY(ofGetFrameNum() * 0.09);
 
 	ofSetColor(239);
 	this->mesh.drawFaces();
