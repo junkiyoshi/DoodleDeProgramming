@@ -6,37 +6,83 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofNoFill();
-	ofSetColor(255);
+	ofBackground(239);
 	ofEnableDepthTest();
+
+	this->seed = ofRandom(39);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+
+	if (ofGetFrameNum() % 25 < 5) {
+
+		this->seed = ofRandom(10000);
+	}
+
+	ofSeedRandom(this->seed);
+
+	this->sphere_list.clear();
+
+	auto ico_sphere = ofIcoSpherePrimitive(1, 5);
+	this->base_location_list = ico_sphere.getMesh().getVertices();
+
+	this->number_of_sphere = 1800;
+	while (this->sphere_list.size() < this->number_of_sphere) {
+
+		int index = ofRandom(this->base_location_list.size());
+		auto tmp_location = this->base_location_list[index];
+		tmp_location = glm::normalize(tmp_location) * ofRandom(0, 100);
+
+		auto radius = this->sphere_list.size() < 130 ? ofRandom(10, 50) : ofRandom(2, 20);
+
+		bool flag = true;
+		for (int i = 0; i < this->sphere_list.size(); i++) {
+
+			if (glm::distance(tmp_location, get<1>(this->sphere_list[i])) < get<2>(this->sphere_list[i]) + radius) {
+
+				flag = false;
+				break;
+			}
+		}
+
+		if (flag) {
+
+			ofColor color;
+			color.setHsb(ofRandom(255), 180, 255);
+
+			auto size = (radius * 2) / sqrt(3);
+
+			this->sphere_list.push_back(std::make_tuple(color, tmp_location, size));
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(90);
+	ofRotateY(ofGetFrameNum() * 0.72);
 
-	auto radius = 100;
-	auto deg_span = 10;
-	auto size = radius * 2 * PI / 360 * deg_span;
-	radius += size;
+	for (int i = 0; i < this->sphere_list.size(); i++) {
 
-	for (float deg = 0; deg < 360; deg += deg_span) {
-
-		auto location = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
+		auto location = get<1>(this->sphere_list[i]);
+		auto size = get<2>(this->sphere_list[i]);
 
 		ofPushMatrix();
 		ofTranslate(location);
-		ofRotateZ(deg);
-		ofRotateY(deg * 0.5 + ofGetFrameNum());
 
-		ofDrawBox(size, size, size);
+		ofRotateZ(ofRandom(360));
+		ofRotateY(ofRandom(360));
+		ofRotateX(ofRandom(360));
+
+		ofFill();
+		ofSetColor(0);
+		ofDrawBox(size);
+
+		ofNoFill();
+		ofSetColor(get<0>(this->sphere_list[i]));
+		ofDrawBox(size);
 
 		ofPopMatrix();
 	}
@@ -45,7 +91,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 150;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -63,6 +109,7 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 int main() {
+
 	ofSetupOpenGL(720, 720, OF_WINDOW);
 	ofRunApp(new ofApp());
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp {
@@ -20,4 +21,11 @@ public:
 	void gotMessage(ofMessage msg) {};
 
 	ofEasyCam cam;
+
+	float seed;
+
+	vector<glm::vec3> base_location_list;
+
+	vector<std::tuple<ofColor, glm::vec3, float>> sphere_list; // BodyColor, Location, size
+	int number_of_sphere;
 };
