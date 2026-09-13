@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->seed = ofRandom(39);
@@ -15,7 +15,7 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	if (ofGetFrameNum() % 25 < 5) {
+	if (ofGetFrameNum() % 50 < 5) {
 
 		this->seed = ofRandom(10000);
 	}
@@ -27,14 +27,14 @@ void ofApp::update() {
 	auto ico_sphere = ofIcoSpherePrimitive(1, 5);
 	this->base_location_list = ico_sphere.getMesh().getVertices();
 
-	this->number_of_sphere = 1800;
+	this->number_of_sphere = 2000;
 	while (this->sphere_list.size() < this->number_of_sphere) {
 
 		int index = ofRandom(this->base_location_list.size());
 		auto tmp_location = this->base_location_list[index];
 		tmp_location = glm::normalize(tmp_location) * ofRandom(0, 100);
 
-		auto radius = this->sphere_list.size() < 130 ? ofRandom(10, 50) : ofRandom(2, 20);
+		auto radius = this->sphere_list.size() < 15 ? ofRandom(10, 50) : ofRandom(2, 20);
 
 		bool flag = true;
 		for (int i = 0; i < this->sphere_list.size(); i++) {
@@ -49,7 +49,7 @@ void ofApp::update() {
 		if (flag) {
 
 			ofColor color;
-			color.setHsb(ofRandom(255), 180, 255);
+			color.setHsb(ofRandom(255), 255, 255);
 
 			auto size = (radius * 2) / sqrt(3);
 
@@ -72,17 +72,13 @@ void ofApp::draw() {
 		ofPushMatrix();
 		ofTranslate(location);
 
-		ofRotateZ(ofRandom(360));
-		ofRotateY(ofRandom(360));
-		ofRotateX(ofRandom(360));
-
 		ofFill();
 		ofSetColor(0);
-		ofDrawBox(size);
+		ofDrawBox(size, size * 0.1, size);
 
 		ofNoFill();
 		ofSetColor(get<0>(this->sphere_list[i]));
-		ofDrawBox(size);
+		ofDrawBox(size, size * 0.1, size);
 
 		ofPopMatrix();
 	}
@@ -91,7 +87,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 150;
+	int start = 505;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
