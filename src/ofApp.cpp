@@ -6,54 +6,115 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
+	ofBackground(239);
 	ofEnableDepthTest();
 
-	this->seed = ofRandom(39);
+	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	if (ofGetFrameNum() % 50 < 5) {
+	this->noise_param += 0.01;
 
-		this->seed = ofRandom(10000);
-	}
+	this->face.clear();
+	this->line.clear();
 
-	ofSeedRandom(this->seed);
+	float threshold_1 = 0.4;
+	float threshold_2 = 0.6;
+	float deg_span = 0.2;
+	float z_span = 1;
+	float noise_span = 0.01;
+	float noise_span_z_scale = 0.15;
 
-	this->sphere_list.clear();
+	for (float radius = 160; radius <= 320; radius += 160) {
 
-	auto ico_sphere = ofIcoSpherePrimitive(1, 5);
-	this->base_location_list = ico_sphere.getMesh().getVertices();
+		for (float deg = 0; deg < 360; deg += deg_span) {
 
-	this->number_of_sphere = 2000;
-	while (this->sphere_list.size() < this->number_of_sphere) {
+			for (float z = -500; z <= 500; z += z_span) {
 
-		int index = ofRandom(this->base_location_list.size());
-		auto tmp_location = this->base_location_list[index];
-		tmp_location = glm::normalize(tmp_location) * ofRandom(0, 100);
+				auto noise_value = ofNoise(glm::vec4(radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale, noise_param));
+				noise_value = abs(z) > 470 ? 0.5 : noise_value;
+				if (noise_value <= threshold_1 || noise_value >= threshold_2) { continue; }
 
-		auto radius = this->sphere_list.size() < 15 ? ofRandom(10, 50) : ofRandom(2, 20);
+				auto noise_1 = ofNoise(glm::vec4(radius * cos((deg - deg_span) * DEG_TO_RAD) * noise_span, radius * sin((deg - deg_span) * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale, noise_param));
+				auto noise_2 = ofNoise(glm::vec4(radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, (z + z_span) * noise_span * noise_span_z_scale, noise_param));
+				auto noise_3 = ofNoise(glm::vec4(radius * cos(deg * DEG_TO_RAD) * noise_span, radius * sin(deg * DEG_TO_RAD) * noise_span, (z - z_span) * noise_span * noise_span_z_scale, noise_param));
+				auto noise_4 = ofNoise(glm::vec4(radius * cos((deg + deg_span) * DEG_TO_RAD) * noise_span, radius * sin((deg + deg_span) * DEG_TO_RAD) * noise_span, z * noise_span * noise_span_z_scale, noise_param));
 
-		bool flag = true;
-		for (int i = 0; i < this->sphere_list.size(); i++) {
+				noise_1 = abs(z) > 470 ? 0.5 : noise_1;
+				noise_2 = abs(z + z_span) > 470 ? 0.5 : noise_2;
+				noise_3 = abs(z - z_span) > 470 ? 0.5 : noise_3;
+				noise_4 = abs(z) > 470 ? 0.5 : noise_4;
 
-			if (glm::distance(tmp_location, get<1>(this->sphere_list[i])) < get<2>(this->sphere_list[i]) + radius) {
+				auto index = this->face.getNumVertices();
+				vector<glm::vec3> vertices;
 
-				flag = false;
-				break;
+				vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z - z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg - deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg - deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
+				vertices.push_back(glm::vec3(radius * cos((deg + deg_span * 0.5) * DEG_TO_RAD), radius * sin((deg + deg_span * 0.5) * DEG_TO_RAD), z + z_span * 0.5));
+
+				this->face.addVertices(vertices);
+
+				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
+
+				ofColor face_color(0);
+				for (int i = 0; i < 4; i++) {
+
+					this->face.addColor(face_color);
+				}
+
+				ofColor line_color(255, 0, 0);
+				if (noise_1 <= threshold_1 || noise_1 >= threshold_2 || abs(z) == 500) {
+
+					this->line.addVertex(vertices[0]);
+					this->line.addVertex(vertices[2]);
+
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+
+					this->line.addColor(line_color);
+					this->line.addColor(line_color);
+				}
+
+				if (noise_2 <= threshold_1 || noise_2 >= threshold_2 || abs(z) == 500) {
+
+					this->line.addVertex(vertices[2]);
+					this->line.addVertex(vertices[3]);
+
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+
+					this->line.addColor(line_color);
+					this->line.addColor(line_color);
+				}
+
+				if (noise_3 <= threshold_1 || noise_3 >= threshold_2 || abs(z) == 500) {
+
+					this->line.addVertex(vertices[0]);
+					this->line.addVertex(vertices[1]);
+
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+
+					this->line.addColor(line_color);
+					this->line.addColor(line_color);
+				}
+
+				if (noise_4 <= threshold_1 || noise_4 >= threshold_2 || abs(z) == 500) {
+
+					this->line.addVertex(vertices[1]);
+					this->line.addVertex(vertices[3]);
+
+					this->line.addIndex(this->line.getNumVertices() - 1);
+					this->line.addIndex(this->line.getNumVertices() - 2);
+
+					this->line.addColor(line_color);
+					this->line.addColor(line_color);
+				}
 			}
-		}
-
-		if (flag) {
-
-			ofColor color;
-			color.setHsb(ofRandom(255), 255, 255);
-
-			auto size = (radius * 2) / sqrt(3);
-
-			this->sphere_list.push_back(std::make_tuple(color, tmp_location, size));
 		}
 	}
 }
@@ -62,32 +123,17 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 0.72);
+	this->cam.setPosition(0, 0, 1200);
+	ofRotateX(90);
 
-	for (int i = 0; i < this->sphere_list.size(); i++) {
-
-		auto location = get<1>(this->sphere_list[i]);
-		auto size = get<2>(this->sphere_list[i]);
-
-		ofPushMatrix();
-		ofTranslate(location);
-
-		ofFill();
-		ofSetColor(0);
-		ofDrawBox(size, size * 0.1, size);
-
-		ofNoFill();
-		ofSetColor(get<0>(this->sphere_list[i]));
-		ofDrawBox(size, size * 0.1, size);
-
-		ofPopMatrix();
-	}
+	this->line.draw();
+	this->face.draw();
 
 	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 505;
+	int start = 25;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
