@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -15,19 +15,22 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	this->noise_param += 0.01;
+	if (ofGetFrameNum() % 50 < 15) {
+
+		this->noise_param += ofMap(ofGetFrameNum() % 50, 0, 15, 0.25, 0);
+	}
 
 	this->face.clear();
 	this->line.clear();
 
-	float threshold_1 = 0.4;
-	float threshold_2 = 0.6;
-	float deg_span = 0.2;
+	float threshold_1 = 0.48;
+	float threshold_2 = 0.52;
+	float deg_span = 0.25;
 	float z_span = 1;
-	float noise_span = 0.01;
-	float noise_span_z_scale = 0.15;
+	float noise_span = 0.005;
+	float noise_span_z_scale = 0.25;
 
-	for (float radius = 160; radius <= 320; radius += 160) {
+	for (float radius = 160; radius <= 190; radius += 10) {
 
 		for (float deg = 0; deg < 360; deg += deg_span) {
 
@@ -66,7 +69,7 @@ void ofApp::update() {
 					this->face.addColor(face_color);
 				}
 
-				ofColor line_color(255, 0, 0);
+				ofColor line_color(0, 0, 255);
 				if (noise_1 <= threshold_1 || noise_1 >= threshold_2 || abs(z) == 500) {
 
 					this->line.addVertex(vertices[0]);
@@ -123,8 +126,9 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	this->cam.setPosition(0, 0, 1200);
+	this->cam.setPosition(0, 0, 1100);
 	ofRotateX(90);
+	ofRotateZ(ofGetFrameNum() * 0.72);
 
 	this->line.draw();
 	this->face.draw();
@@ -133,7 +137,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 25;
+	int start = 15;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
