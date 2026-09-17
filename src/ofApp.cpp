@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -15,23 +16,20 @@ void ofApp::setup() {
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	if (ofGetFrameNum() % 50 < 15) {
-
-		this->noise_param += ofMap(ofGetFrameNum() % 50, 0, 15, 0.25, 0);
-	}
+	this->noise_param += 0.01;
 
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 0.1;
-	float theta_deg_step = 0.1;
-	float theta_start = 70;
-	float theta_end = 110;
-	float threshold_1 = 0.44;
-	float threshold_2 = 0.56;
-	float noise_spam = 30;
+	float phi_deg_step = 3;
+	float theta_deg_step = 3;
+	float theta_start = 80;
+	float theta_end = 100;
+	float threshold_1 = 0.45;
+	float threshold_2 = 0.55;
+	float noise_spam = 5;
 
-	for (float radius = 280; radius <= 300; radius += 2) {
+	for (float radius = 250; radius <= 300; radius += 5) {
 
 		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
@@ -123,23 +121,21 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	this->cam.setPosition(0, 0, 370);
-	ofTranslate(0, -180, 0);
 
-	ofRotateY(90);
-	ofRotateZ(ofGetFrameNum() * 0.72);
+	ofRotateX(90);
+	ofRotateZ(ofGetFrameNum() * 0.05);
 
-	ofSetColor(0);
+	ofSetColor(39);
 	this->face.draw();
 
-	ofSetColor(239);
+	ofSetColor(39, 239, 39);
 	this->line.draw();
 
 	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 2;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
