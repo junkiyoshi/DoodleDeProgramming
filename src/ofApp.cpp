@@ -6,9 +6,11 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(1.5);
+	ofBackground(39);
 	ofEnableDepthTest();
+
+	ofSetCircleResolution(36);
+	ofNoFill();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
@@ -34,7 +36,7 @@ void ofApp::update() {
 
 		for (auto x = -len * 0.125; x <= len * 0.125; x += span) {
 
-			for (auto y = -len * 12; y <= len * 6; y += span) {
+			for (auto y = -len * 3; y <= len * 3; y += span) {
 
 				angle = PI * 0.125 * i;
 				rotation = glm::rotate(glm::mat4(), angle, glm::vec3(0, 1, 0));
@@ -49,8 +51,8 @@ void ofApp::update() {
 
 				for (auto& vertex : vertices) {
 
-					auto noise_value = ofNoise(vertex.y * 0.0008 + ofGetFrameNum() * 0.008);
-					auto twist_rad = ofMap(noise_value, 0, 1, PI * -10, PI * 10);
+					auto noise_value = ofNoise(vertex.y * 0.00035 + ofGetFrameNum() * 0.002);
+					auto twist_rad = ofMap(noise_value, 0, 1, PI * -14, PI * 14);
 					twist = glm::rotate(glm::mat4(), twist_rad, glm::vec3(0, 1, 0));
 
 					vertex = glm::vec4(vertex, 0) * twist;
@@ -98,16 +100,20 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(270);
-
+	
 	this->frame.drawWireframe();
 	this->face.draw();
+
+	ofRotateX(270);
+
+	ofDrawCircle(glm::vec3(0, 0, 300), 100);
+	ofDrawCircle(glm::vec3(0, 0, -300), 100);
 
 	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 1000;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
