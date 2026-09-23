@@ -27,4 +27,5 @@ public:
 
 	vector<float> radius_list;
 	vector<glm::vec3> rotation_list;
+	vector<ofColor> color_list;
 };

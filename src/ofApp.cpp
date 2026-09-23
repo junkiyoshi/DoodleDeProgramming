@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(0);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
@@ -19,21 +18,25 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 	glm::vec3 noise_param = glm::vec3(ofRandom(360), ofRandom(360), ofRandom(360));
+	ofColor color;
+	color.setHsb((ofGetFrameNum() * 3) % 255, 255, 255);
 
-	this->radius_list.push_back(230);
+	this->radius_list.push_back(500);
 	this->rotation_list.push_back(glm::vec3(
-		ofMap(ofNoise(noise_param.x, ofGetFrameNum() * 0.02), 0, 1, -360, 360),
-		ofMap(ofNoise(noise_param.y, ofGetFrameNum() * 0.02), 0, 1, -360, 360),
-		ofMap(ofNoise(noise_param.z, ofGetFrameNum() * 0.02), 0, 1, -360, 360)));
+		ofMap(ofNoise(noise_param.x, ofGetFrameNum() * 0.01), 0, 1, -360, 360),
+		ofMap(ofNoise(noise_param.y, ofGetFrameNum() * 0.01), 0, 1, -360, 360),
+		ofMap(ofNoise(noise_param.z, ofGetFrameNum() * 0.01), 0, 1, -360, 360)));
+	this->color_list.push_back(color);
 
 	for (int i = this->radius_list.size() - 1; i > -1; i--) {
 
-		this->radius_list[i] += 1;
+		this->radius_list[i] += 2;
 
-		if (this->radius_list[i] > 250) {
+		if (this->radius_list[i] > 520) {
 
 			this->radius_list.erase(this->radius_list.begin() + i);
 			this->rotation_list.erase(this->rotation_list.begin() + i);
+			this->color_list.erase(this->color_list.begin() + i);
 		}
 	}
 
@@ -42,7 +45,7 @@ void ofApp::update() {
 
 	for (int i = 0; i < this->radius_list.size(); i++) {
 
-		this->setRingToMesh(this->face, this->frame, glm::vec3(), this->rotation_list[i], this->radius_list[i], this->radius_list[i] * 0.1, ofColor(0), ofColor(0, 0, 255));
+		this->setRingToMesh(this->face, this->frame, glm::vec3(), this->rotation_list[i], this->radius_list[i], this->radius_list[i] * 0.1, ofColor(this->color_list[i], 64), this->color_list[i]);
 	}
 }
 
@@ -50,13 +53,9 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 1.44);
 
 	this->face.draw();
 	this->frame.drawWireframe();
-
-	ofSetColor(0);
-	ofDrawSphere(150);
 
 	this->cam.end();
 
@@ -83,12 +82,13 @@ void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 l
 
 	int index = face_target.getNumVertices();
 
-	for (int deg = 0; deg < 360; deg += 5) {
+	int deg_span = 1;
+	for (int deg = 0; deg < 360; deg += deg_span) {
 
 		vector<glm::vec3> vertices;
 		vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3(radius * cos((deg + 5) * DEG_TO_RAD), radius * sin((deg + 5) * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3(radius * cos((deg + 5) * DEG_TO_RAD), radius * sin((deg + 5) * DEG_TO_RAD), height * 0.5));
+		vertices.push_back(glm::vec3(radius * cos((deg + deg_span) * DEG_TO_RAD), radius * sin((deg + deg_span) * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3(radius * cos((deg + deg_span) * DEG_TO_RAD), radius * sin((deg + deg_span) * DEG_TO_RAD), height * 0.5));
 		vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), height * 0.5));
 
 		for (auto& vertex : vertices) {
