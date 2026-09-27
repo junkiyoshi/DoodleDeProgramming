@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 
 	ofEnableDepthTest();
@@ -22,75 +22,72 @@ void ofApp::draw() {
 
 	this->cam.begin();
 
-	int radius = 15;
-	int len = 7;
+	int radius = 10;
+	int len = 5;
 	int gap_x = radius * cos(0 * DEG_TO_RAD);
 	int gap_y = radius + (radius - cos(210 * DEG_TO_RAD)) * 0.6;
 	ofColor color;
 
-	auto flag = false;
-	for (int y = -gap_y * 10; y <= gap_y * 10; y += gap_y) {
+	auto switch_flag = false;
+	for (int y = -gap_y * 15; y <= gap_y * 15; y += gap_y) {
 
 		ofPushMatrix();
-		if (flag = !flag) {
+		if (switch_flag = !switch_flag) {
 		
 			ofTranslate(gap_x, 0, 0);
 		}
 
-		for (int x = -gap_x * 12 ; x <= gap_x * 12; x += gap_x) {
+		for (int x = -gap_x * 25; x <= gap_x * 25; x += gap_x) {
 
-			color.setHsb(ofMap(x, -gap_x * 12, gap_x * 12, 0, 255), 180, 255);
+			color.setHsb(175, 255, 255);
 
-			for (int z = 0; z <= 50; z += 10) {
+			auto noise_x = x - (switch_flag ? 0 : gap_x);
+			auto noise_param = ofNoise(noise_x * 0.008, y * 0.008, ofGetFrameNum() * 0.01);
+			
+			if (noise_param < 0.35 || noise_param > 0.65) { continue; }
 
-				auto noise_param = ofNoise(x * 0.005, y * 0.005, z * 0.005 + ofGetFrameNum() * 0.01);
+			int flag = abs(x) % (gap_x * 2) == 0;
+			int deg_start = flag ? 90 : 270;
+			int tmp_y = flag ? y : y + (radius - cos(210 * DEG_TO_RAD)) * 0.5;
 
-				if (noise_param < 0.35 || noise_param > 0.65) { continue; }
+			ofFill();
+			ofSetColor(color);
 
-				auto alpha = 255;
-				int flag = abs(x) % (gap_x * 2) == 0;
-				int deg_start = flag ? 90 : 270;
-				int tmp_y = flag ? y : y + (radius - cos(210 * DEG_TO_RAD)) * 0.5;
+			ofBeginShape();
 
-				ofFill();
-				ofSetColor(ofColor(color, alpha));
+			for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
 
-				ofBeginShape();
-
-				for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
-
-					ofVertex(glm::vec3(x + radius * cos(deg * DEG_TO_RAD), tmp_y + radius * sin(deg * DEG_TO_RAD), z));
-				}
-
-				ofNextContour(true);
-
-				for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
-
-					ofVertex(glm::vec3(x + (radius - len) * cos(deg * DEG_TO_RAD), tmp_y + (radius - len) * sin(deg * DEG_TO_RAD), z));
-				}
-
-				ofEndShape(true);
-
-
-				ofNoFill();
-				ofSetColor(ofColor(239, alpha));
-
-				ofBeginShape();
-
-				for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
-
-					ofVertex(glm::vec3(x + radius * cos(deg * DEG_TO_RAD), tmp_y + radius * sin(deg * DEG_TO_RAD), z));
-				}
-
-				ofNextContour(true);
-
-				for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
-
-					ofVertex(glm::vec3(x + (radius - len) * cos(deg * DEG_TO_RAD), tmp_y + (radius - len) * sin(deg * DEG_TO_RAD), z));
-				}
-
-				ofEndShape(true);
+				ofVertex(glm::vec3(x + radius * cos(deg * DEG_TO_RAD), tmp_y + radius * sin(deg * DEG_TO_RAD), 0));
 			}
+
+			ofNextContour(true);
+
+			for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
+
+				ofVertex(glm::vec3(x + (radius - len) * cos(deg * DEG_TO_RAD), tmp_y + (radius - len) * sin(deg * DEG_TO_RAD), 0));
+			}
+
+			ofEndShape(true);
+
+
+			ofNoFill();
+			ofSetColor(255);
+
+			ofBeginShape();
+
+			for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
+
+				ofVertex(glm::vec3(x + radius * cos(deg * DEG_TO_RAD), tmp_y + radius * sin(deg * DEG_TO_RAD), 0));
+			}
+
+			ofNextContour(true);
+
+			for (int deg = deg_start; deg < deg_start + 360; deg += 120) {
+
+				ofVertex(glm::vec3(x + (radius - len) * cos(deg * DEG_TO_RAD), tmp_y + (radius - len) * sin(deg * DEG_TO_RAD), 0));
+			}
+
+			ofEndShape(true);
 		}
 
 		ofPopMatrix();
@@ -98,6 +95,7 @@ void ofApp::draw() {
 
 	this->cam.end();
 
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -112,6 +110,7 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
+	*/
 }
 
 //--------------------------------------------------------------
