@@ -6,14 +6,41 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+
+	ofColor color;
+	this->number_of_sphere = 250;
+	while (this->box_list.size() < this->number_of_sphere) {
+
+		auto tmp_location = this->make_point(250, ofRandom(0, 30), ofRandom(360), ofRandom(360));
+		auto radius = this->box_list.size() < 60 ? ofRandom(10, 30) : ofRandom(5, 20);
+
+		bool flag = true;
+		for (int i = 0; i < this->box_list.size(); i++) {
+
+			if (glm::distance(tmp_location, get<1>(this->box_list[i])) < get<2>(this->box_list[i]) + radius) {
+
+				flag = false;
+				break;
+			}
+		}
+
+		if (flag) {
+
+			color.setHsb(ofRandom(255), 180, 255);
+			auto size = (radius * 2) / sqrt(3);
+			this->box_list.push_back(std::make_tuple(color, tmp_location, size));
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+
+	ofSeedRandom(39);
 
 	this->face.clear();
 	this->line.clear();
@@ -28,13 +55,13 @@ void ofApp::update() {
 
 		for (float theta_deg = 0; theta_deg < 360; theta_deg += theta_deg_step) {
 
-			auto noise_value = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg) * 0.01, ofGetFrameNum() * 0.001));
-			if (noise_value < 0.45 || noise_value > 0.55) { continue; }
+			auto noise_value = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg) * 0.01, ofGetFrameNum() * 0.01));
+			if (noise_value < 0.43 || noise_value > 0.57) { continue; }
 
-			auto noise_1 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg - theta_deg_step, phi_deg) * 0.01, ofGetFrameNum() * 0.001));
-			auto noise_2 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg + phi_deg_step) * 0.01, ofGetFrameNum() * 0.001));
-			auto noise_3 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg - phi_deg_step) * 0.01, ofGetFrameNum() * 0.001));
-			auto noise_4 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg + theta_deg_step, phi_deg) * 0.01, ofGetFrameNum() * 0.001));
+			auto noise_1 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg - theta_deg_step, phi_deg) * 0.01, ofGetFrameNum() * 0.01));
+			auto noise_2 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg + phi_deg_step) * 0.01, ofGetFrameNum() * 0.01));
+			auto noise_3 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg, phi_deg - phi_deg_step) * 0.01, ofGetFrameNum() * 0.01));
+			auto noise_4 = ofNoise(glm::vec4(this->make_point(R, r, theta_deg + theta_deg_step, phi_deg) * 0.01, ofGetFrameNum() * 0.01));
 
 			auto index = this->face.getNumVertices();
 			vector<glm::vec3> vertices;
@@ -49,34 +76,43 @@ void ofApp::update() {
 			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
 			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
 
-			if (noise_1 < 0.45 || noise_1 > 0.55) {
+			if (noise_1 < 0.43 || noise_1 > 0.57) {
 
 				this->line.addVertex(vertices[0]);
 				this->line.addVertex(vertices[2]);
 
 				this->line.addIndex(this->line.getNumVertices() - 1);
 				this->line.addIndex(this->line.getNumVertices() - 2);
+
+				this->line.addColor(ofColor(255));
+				this->line.addColor(ofColor(255));
 			}
 
-			if (noise_2 < 0.45 || noise_2 > 0.55) {
+			if (noise_2 < 0.43 || noise_2 > 0.57) {
 
 				this->line.addVertex(vertices[2]);
 				this->line.addVertex(vertices[3]);
 
 				this->line.addIndex(this->line.getNumVertices() - 1);
 				this->line.addIndex(this->line.getNumVertices() - 2);
+
+				this->line.addColor(ofColor(255));
+				this->line.addColor(ofColor(255));
 			}
 
-			if (noise_3 < 0.45 || noise_3 > 0.55) {
+			if (noise_3 < 0.43 || noise_3 > 0.57) {
 
 				this->line.addVertex(vertices[0]);
 				this->line.addVertex(vertices[1]);
 
 				this->line.addIndex(this->line.getNumVertices() - 1);
 				this->line.addIndex(this->line.getNumVertices() - 2);
+
+				this->line.addColor(ofColor(255));
+				this->line.addColor(ofColor(255));
 			}
 
-			if (noise_4 < 0.45 || noise_4 > 0.55) {
+			if (noise_4 < 0.43 || noise_4 > 0.57) {
 
 				this->line.addVertex(vertices[1]);
 				this->line.addVertex(vertices[3]);
@@ -84,35 +120,12 @@ void ofApp::update() {
 				this->line.addIndex(this->line.getNumVertices() - 1);
 				this->line.addIndex(this->line.getNumVertices() - 2);
 
+				this->line.addColor(ofColor(255));
+				this->line.addColor(ofColor(255));
 			}
 		}
 	}
 
-	ofSeedRandom(39);
-
-	this->walker_log_list.clear();
-	this->walker_color_list.clear();
-	ofColor color;
-	for (int i = 0; i < 150; i++) {
-
-		vector<glm::vec3> walker_location_list;
-		auto noise_param = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
-		auto step_u = ofRandom(1, 1.5);
-		auto step_v = ofRandom(1, 1.5);
-		auto tmp_r = ofRandom(r * 0.3, r * 0.7);
-		for (int k = 0; k < 60; k++) {
-
-			auto tmp_u = noise_param.y + (ofGetFrameNum() * 3 + k) * step_u;
-			auto tmp_v = noise_param.z + (ofGetFrameNum() * 3 + k) * step_v;
-
-			walker_location_list.push_back(this->make_point(R, tmp_r, tmp_u, tmp_v));
-		}
-
-		color.setHsb((int)ofMap(i, 0, 150, 180, 280) % 255, 255, 255);
-
-		this->walker_log_list.push_back(walker_location_list);
-		this->walker_color_list.push_back(color);
-	}
 }
 
 //--------------------------------------------------------------
@@ -128,20 +141,30 @@ void ofApp::draw() {
 	ofSetColor(0);
 	this->face.draw();
 
-	ofSetLineWidth(2);
+	ofRotateZ(ofGetFrameNum() * 0.72);
 
-	for (int i = 0; i < this->walker_log_list.size(); i++) {
+	for (int i = 0; i < this->box_list.size(); i++) {
 
-		auto walker_log = this->walker_log_list[i];
-		ofSetColor(this->walker_color_list[i]);
+		auto color = get<0>(this->box_list[i]);
+		auto location = get<1>(this->box_list[i]);
+		auto size = get<2>(this->box_list[i]);
+
+		ofPushMatrix();
+		ofTranslate(location);
+
+		ofRotateZ(ofRandom(360) + ofGetFrameNum() * ofRandom(1, 5));
+		ofRotateY(ofRandom(360) + ofGetFrameNum() * ofRandom(1, 5));
+		ofRotateX(ofRandom(360) + ofGetFrameNum() * ofRandom(1, 5));
+
+		ofFill();
+		ofSetColor(color);
+		ofDrawBox(size);
 
 		ofNoFill();
-		ofBeginShape();
-		for (auto& walker_location : walker_log) {
+		ofSetColor(255);
+		ofDrawBox(size);
 
-			ofVertex(walker_location);
-		}
-		ofEndShape();
+		ofPopMatrix();
 	}
 
 	this->cam.end();

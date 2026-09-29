@@ -23,6 +23,8 @@ public:
 	ofEasyCam cam;
 	ofMesh face, line;
 
-	vector<vector<glm::vec3>> walker_log_list;
-	vector<ofColor> walker_color_list;
+	vector<glm::vec3> base_location_list;
+
+	vector<std::tuple<ofColor, glm::vec3, float>> box_list; // BodyColor, Location, size
+	int number_of_sphere;
 };
