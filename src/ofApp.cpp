@@ -6,7 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
@@ -21,12 +22,13 @@ void ofApp::draw() {
 	ofTranslate(ofGetWindowSize() * 0.5);
 
 	float radius = 280;
+	ofColor color;
 	for (int i = 0; i < 8; i++) {
 
-		float len = ofMap(i, 0, 8, 2, 50);
+		float len = ofMap(i, 0, 8, 5, 60);
 
 		vector<glm::vec2> vertices_1, vertices_2;
-		float deg_start = ofMap(ofNoise(ofRandom(360), ofGetFrameNum() * 0.005), 0, 1, -360, 360);
+		float deg_start = ofMap(ofNoise(i * 0.1 - ofGetFrameNum() * 0.01), 0, 1, -360, 360);
 
 		for (float deg = deg_start; deg < deg_start + 90; deg += 1) {
 
@@ -36,9 +38,18 @@ void ofApp::draw() {
 
 		reverse(vertices_2.begin(), vertices_2.end());
 
+		color.setHsb(180, ofMap(i, 0, 8, 255, 100), 255);
+
 		ofNoFill();
-		ofSetColor(0);
-		ofSetLineWidth(1);
+		ofSetColor(color);
+
+		ofBeginShape();
+		ofVertices(vertices_1);
+		ofVertices(vertices_2);
+		ofEndShape(true);
+
+		ofFill();
+		ofSetColor(color, 128);
 
 		ofBeginShape();
 		ofVertices(vertices_1);
