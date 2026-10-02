@@ -1,3 +1,4 @@
+#pragma once
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp {
@@ -18,4 +19,10 @@ public:
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
+
+	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, glm::vec3 rotation, float radius, float height, ofColor face_color, ofColor frame_color);
+
+	ofEasyCam cam;
+	ofMesh face, frame;
+	float noise_step;
 };

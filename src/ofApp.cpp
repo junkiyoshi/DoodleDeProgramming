@@ -4,58 +4,51 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
+	ofBackground(239);
+	ofEnableDepthTest();
+
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
 	ofSeedRandom(39);
+
+	this->noise_step += 0.005;
+
+	this->face.clear();
+	this->frame.clear();
+
+	ofColor color;
+	auto noise_seed = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
+	for (float radius = 160; radius <= 320; radius += 10) {
+
+		auto rotation = glm::vec3(
+			ofMap(ofNoise(noise_seed.x, radius * 0.005 - this->noise_step), 0, 1, -90, 90),
+			ofMap(ofNoise(noise_seed.y, radius * 0.005 - this->noise_step), 0, 1, -90, 90),
+			ofMap(ofNoise(noise_seed.z, radius * 0.005 - this->noise_step), 0, 1, -90, 90));
+
+		color.setHsb(100, 255, 255);
+		auto len = radius < 240 ? ofMap(radius, 160, 240, 5, 25) : ofMap(radius, 240, 320, 25, 5);
+
+		this->setRingToMesh(this->face, this->frame, glm::vec3(), rotation, radius, len, ofColor(0), color);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
+	this->cam.begin();
+	ofRotateX(180);
+	ofRotateX(ofGetFrameNum() * 2.88);
 
-	float radius = 280;
-	ofColor color;
-	for (int i = 0; i < 8; i++) {
+	this->face.draw();
+	this->frame.drawWireframe();
 
-		float len = ofMap(i, 0, 8, 5, 60);
-
-		vector<glm::vec2> vertices_1, vertices_2;
-		float deg_start = ofMap(ofNoise(i * 0.1 - ofGetFrameNum() * 0.01), 0, 1, -360, 360);
-
-		for (float deg = deg_start; deg < deg_start + 90; deg += 1) {
-
-			vertices_1.push_back(glm::vec2((radius - len * 0.5) * cos(deg * DEG_TO_RAD), (radius - len * 0.5) * sin(deg * DEG_TO_RAD)));
-			vertices_2.push_back(glm::vec2((radius + len * 0.5) * cos(deg * DEG_TO_RAD), (radius + len * 0.5) * sin(deg * DEG_TO_RAD)));
-		}
-
-		reverse(vertices_2.begin(), vertices_2.end());
-
-		color.setHsb(180, ofMap(i, 0, 8, 255, 100), 255);
-
-		ofNoFill();
-		ofSetColor(color);
-
-		ofBeginShape();
-		ofVertices(vertices_1);
-		ofVertices(vertices_2);
-		ofEndShape(true);
-
-		ofFill();
-		ofSetColor(color, 128);
-
-		ofBeginShape();
-		ofVertices(vertices_1);
-		ofVertices(vertices_2);
-		ofEndShape(true);
-	}
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -72,6 +65,48 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
+
+//--------------------------------------------------------------
+void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, glm::vec3 rotation, float radius, float height, ofColor face_color, ofColor frame_color) {
+
+	int index = face_target.getNumVertices();
+
+	for (int deg = 0; deg < 360; deg += 2) {
+
+		vector<glm::vec3> vertices;
+		vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3(radius * cos((deg + 10) * DEG_TO_RAD), radius * sin((deg + 10) * DEG_TO_RAD), height * -0.5));
+		vertices.push_back(glm::vec3(radius * cos((deg + 10) * DEG_TO_RAD), radius * sin((deg + 10) * DEG_TO_RAD), height * 0.5));
+		vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), height * 0.5));
+
+		for (auto& vertex : vertices) {
+
+			auto rotation_x = glm::rotate(glm::mat4(), rotation.x * (float)DEG_TO_RAD, glm::vec3(1, 0, 0));
+			auto rotation_y = glm::rotate(glm::mat4(), rotation.y * (float)DEG_TO_RAD, glm::vec3(0, 1, 0));
+			auto rotation_z = glm::rotate(glm::mat4(), rotation.z * (float)DEG_TO_RAD, glm::vec3(0, 0, 1));
+
+			vertex = glm::vec4(vertex, 0) * rotation_y * rotation_x + glm::vec4(location, 0);
+		}
+
+		auto face_index = face_target.getNumVertices();
+		face_target.addVertices(vertices);
+
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 2);
+		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 3);
+
+		auto frame_index = frame_target.getNumVertices();
+		frame_target.addVertices(vertices);
+
+		frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 1);
+		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
+
+		for (int i = 0; i < vertices.size(); i++) {
+
+			face_target.addColor(face_color);
+			frame_target.addColor(frame_color);
+		}
+	}
 }
 
 //--------------------------------------------------------------
