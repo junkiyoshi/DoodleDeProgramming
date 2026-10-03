@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -24,15 +24,15 @@ void ofApp::update() {
 
 	ofColor color;
 	auto noise_seed = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
-	for (float radius = 160; radius <= 320; radius += 10) {
+	for (float radius = 160; radius <= 320; radius += 3) {
 
 		auto rotation = glm::vec3(
-			ofMap(ofNoise(noise_seed.x, radius * 0.005 - this->noise_step), 0, 1, -90, 90),
-			ofMap(ofNoise(noise_seed.y, radius * 0.005 - this->noise_step), 0, 1, -90, 90),
-			ofMap(ofNoise(noise_seed.z, radius * 0.005 - this->noise_step), 0, 1, -90, 90));
+			ofMap(ofNoise(noise_seed.x, radius * ofMap(radius, 160, 320, 0.0001, 0.1) - this->noise_step), 0, 1, -90, 90),
+			ofMap(ofNoise(noise_seed.y, radius * ofMap(radius, 160, 320, 0.0001, 0.1) - this->noise_step), 0, 1, -90, 90),
+			ofMap(ofNoise(noise_seed.z, radius * ofMap(radius, 160, 320, 0.0001, 0.1) - this->noise_step), 0, 1, -90, 90));
 
-		color.setHsb(100, 255, 255);
-		auto len = radius < 240 ? ofMap(radius, 160, 240, 5, 25) : ofMap(radius, 240, 320, 25, 5);
+		color.setHsb(100, 255, ofMap(radius, 160, 320, 255, 64));
+		auto len = ofMap(radius, 160, 320, 3, 25);
 
 		this->setRingToMesh(this->face, this->frame, glm::vec3(), rotation, radius, len, ofColor(0), color);
 	}
@@ -43,7 +43,7 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(180);
-	ofRotateX(ofGetFrameNum() * 2.88);
+	ofRotateY(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
 	this->frame.drawWireframe();
