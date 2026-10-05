@@ -6,16 +6,24 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
-	ofSetColor(39);
+	ofBackground(39);
+	ofSetColor(239);
 
+	ofNoFill();
 	ofSetLineWidth(2);
+
+	this->noise_param = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
 	ofSeedRandom(39);
+
+	if (ofGetFrameNum() % 50 < 25) {
+
+		this->noise_param += ofMap(ofGetFrameNum() % 25, 0, 25, 0.3, 0);
+	}
 }
 
 //--------------------------------------------------------------
@@ -24,9 +32,6 @@ void ofApp::draw() {
 	auto radius = 24;
 	auto x_span = radius * sqrt(3);
 	auto flg = true;
-
-	auto x_seed = ofRandom(1000);
-	auto y_seed = ofRandom(1000);
 
 	for (float y = 0; y <= 720 + radius; y += radius * 1.5) {
 
@@ -42,39 +47,20 @@ void ofApp::draw() {
 				location = glm::vec3(x + (x_span / 2), y, 0);
 			}
 
-			auto noise_value = ofNoise(location.x * 0.0025, location.y * 0.0025, ofGetFrameNum() * 0.01, x_seed);
-			if (noise_value < 0.4 || noise_value > 0.6) { continue; }
+			auto noise_value = ofNoise(location.x * 0.0025, location.y * 0.0025 + this->noise_param, this->noise_param * 0.25);
+			if (noise_value < 0.35 || noise_value > 0.65) { continue; }
 
 			ofPushMatrix();
 			ofTranslate(location);
 			ofRotate(90);
 
 			ofBeginShape();
-			for (int deg = 0; deg <= 360; deg += 1) {
+			for (int deg = 0; deg <= 360; deg += 60) {
 
-				int draw_radius = radius * 0.8;
-				int param = deg % 60;
-
-				glm::vec2 location;
-				if (param == 0) {
-
-					location = glm::vec2(draw_radius * cos(deg * DEG_TO_RAD), draw_radius * sin(deg * DEG_TO_RAD));
-				}
-				else {
-
-					int p1 = deg / 60;
-					int p2 = p1 + 1;
-
-					auto p1_deg = p1 * 60;
-					auto p2_deg = p2 * 60;
-
-					auto source = glm::vec2(draw_radius * cos(p1_deg * DEG_TO_RAD), draw_radius * sin(p1_deg * DEG_TO_RAD));
-					auto target = glm::vec2(draw_radius * cos(p2_deg * DEG_TO_RAD), draw_radius * sin(p2_deg * DEG_TO_RAD));
-
-					location = source + ((target - source) / 60 * param);
-				}
-
-				ofVertex(location);
+				auto draw_radius = radius * 0.8;
+				auto target = glm::vec2(draw_radius * cos(deg * DEG_TO_RAD), draw_radius * sin(deg * DEG_TO_RAD));
+				
+				ofVertex(target);
 			}
 			ofEndShape(false);
 
@@ -83,6 +69,7 @@ void ofApp::draw() {
 		flg = !flg;
 	}
 
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -96,6 +83,7 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
+	*/
 }
 
 //--------------------------------------------------------------
