@@ -14,11 +14,13 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
-	void mouseEntered(int x, int y) {};
-	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
+	ofEasyCam cam;
+	float base_radius;
+	ofIcoSpherePrimitive ico_sphere;
+	ofMesh face, frame;
 	float noise_param;
 };

@@ -4,13 +4,14 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetColor(239);
+	ofBackground(239);
+	ofEnableDepthTest();
 
-	ofNoFill();
-	ofSetLineWidth(2);
+	this->base_radius = 65;
+	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 1);
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	this->noise_param = ofRandom(1000);
 }
@@ -20,54 +21,94 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	if (ofGetFrameNum() % 50 < 25) {
+	this->face.clear();
+	this->frame.clear();
 
-		this->noise_param += ofMap(ofGetFrameNum() % 25, 0, 25, 0.3, 0);
+	int radius_start = this->base_radius;
+	int radius_max = this->base_radius * 24;
+	int count = 0;
+	for (auto& triangle : this->ico_sphere.getMesh().getUniqueFaces()) {
+
+		auto noise_seed_x = ofRandom(1000);
+		auto noise_seed_y = ofRandom(1000);
+		auto noise_seed_z = ofRandom(1000);
+
+		auto noise_value = ofNoise(glm::vec4(triangle.getVertex(0) * 2, this->noise_param * 2.5));
+		int radius_end = noise_value < 0.7 ? radius_start : ofMap(noise_value, 0.7, 1, radius_start, radius_max);
+
+		this->frame.addVertex(glm::vec3());
+
+		for (int radius = radius_start; radius <= radius_end; radius += 1) {
+
+			auto mesh_index = this->face.getNumVertices();
+			auto frame_index = this->frame.getNumVertices();
+
+			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 6);
+
+			auto angle_x = ofMap(ofNoise(noise_seed_x, radius * 0.001 + this->noise_param), 0, 1, -param, param);
+			auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
+			auto angle_y = ofMap(ofNoise(noise_seed_y, radius * 0.001 + this->noise_param), 0, 1, -param, param);
+			auto rotation_y = glm::rotate(glm::mat4(), angle_y, glm::vec3(0, 1, 0));
+			auto angle_z = ofMap(ofNoise(noise_seed_z, radius * 0.001 + this->noise_param), 0, 1, -param, param);
+			auto rotation_z = glm::rotate(glm::mat4(), angle_z, glm::vec3(0, 0, 1));
+
+			glm::vec3 avg = (triangle.getVertex(0) + triangle.getVertex(1) + triangle.getVertex(2)) / 3;
+			glm::vec3 location = glm::normalize(avg) * radius;
+
+			vector<glm::vec3> vertices;
+			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(0) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(0) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
+			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(1) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(1) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
+			vertices.push_back(glm::vec4(location + glm::normalize(triangle.getVertex(2) - avg) * ofMap(radius, radius_start, radius_end, glm::length(triangle.getVertex(2) - avg), 0), 0) * rotation_z * rotation_y * rotation_x);
+
+			this->face.addVertices(vertices);
+			this->frame.addVertices(vertices);
+
+			for (int i = 0; i < vertices.size(); i++) {
+
+				this->face.addColor(ofColor(39));
+				this->frame.addColor(ofColor(239, 239, 39));
+			}
+
+			if (radius == radius_start || radius == radius_end) {
+
+				this->face.addIndex(mesh_index + 0); this->face.addIndex(mesh_index + 1); this->face.addIndex(mesh_index + 2);
+
+				this->frame.addIndex(frame_index + 0); this->frame.addIndex(frame_index + 1);
+				this->frame.addIndex(frame_index + 1); this->frame.addIndex(frame_index + 2);
+				this->frame.addIndex(frame_index + 2); this->frame.addIndex(frame_index + 0);
+			}
+
+			if (radius > radius_start) {
+
+				this->face.addIndex(mesh_index + 0); this->face.addIndex(mesh_index + 1); this->face.addIndex(mesh_index - 2);
+				this->face.addIndex(mesh_index + 0); this->face.addIndex(mesh_index - 2); this->face.addIndex(mesh_index - 3);
+
+				this->face.addIndex(mesh_index + 1); this->face.addIndex(mesh_index + 2); this->face.addIndex(mesh_index - 1);
+				this->face.addIndex(mesh_index + 1); this->face.addIndex(mesh_index - 1); this->face.addIndex(mesh_index - 2);
+
+				this->face.addIndex(mesh_index + 2); this->face.addIndex(mesh_index + 0); this->face.addIndex(mesh_index - 3);
+				this->face.addIndex(mesh_index + 2); this->face.addIndex(mesh_index - 3); this->face.addIndex(mesh_index - 1);
+
+				this->frame.addIndex(frame_index + 0); this->frame.addIndex(frame_index - 3);
+				this->frame.addIndex(frame_index + 1); this->frame.addIndex(frame_index - 2);
+				this->frame.addIndex(frame_index + 2); this->frame.addIndex(frame_index - 1);
+			}
+		}
 	}
+
+	this->noise_param += 0.003;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	auto radius = 24;
-	auto x_span = radius * sqrt(3);
-	auto flg = true;
+	this->cam.begin();
+	ofRotateY(ofGetFrameNum() * 0.36);
 
-	for (float y = 0; y <= 720 + radius; y += radius * 1.5) {
+	this->frame.drawWireframe();
+	this->face.draw();
 
-		for (float x = 0; x <= 720 + radius; x += x_span) {
-
-			glm::vec3 location;
-			if (flg) {
-
-				location = glm::vec3(x, y, 0);
-			}
-			else {
-
-				location = glm::vec3(x + (x_span / 2), y, 0);
-			}
-
-			auto noise_value = ofNoise(location.x * 0.0025, location.y * 0.0025 + this->noise_param, this->noise_param * 0.25);
-			if (noise_value < 0.35 || noise_value > 0.65) { continue; }
-
-			ofPushMatrix();
-			ofTranslate(location);
-			ofRotate(90);
-
-			ofBeginShape();
-			for (int deg = 0; deg <= 360; deg += 60) {
-
-				auto draw_radius = radius * 0.8;
-				auto target = glm::vec2(draw_radius * cos(deg * DEG_TO_RAD), draw_radius * sin(deg * DEG_TO_RAD));
-				
-				ofVertex(target);
-			}
-			ofEndShape(false);
-
-			ofPopMatrix();
-		}
-		flg = !flg;
-	}
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
