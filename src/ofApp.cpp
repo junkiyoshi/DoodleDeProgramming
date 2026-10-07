@@ -6,11 +6,11 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
-	this->base_radius = 65;
-	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 1);
+	this->base_radius = 100;
+	this->ico_sphere = ofIcoSpherePrimitive(this->base_radius, 3);
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
 	this->noise_param = ofRandom(1000);
@@ -25,16 +25,17 @@ void ofApp::update() {
 	this->frame.clear();
 
 	int radius_start = this->base_radius;
-	int radius_max = this->base_radius * 24;
+	int radius_max = this->base_radius * 20;
 	int count = 0;
+
 	for (auto& triangle : this->ico_sphere.getMesh().getUniqueFaces()) {
 
 		auto noise_seed_x = ofRandom(1000);
 		auto noise_seed_y = ofRandom(1000);
 		auto noise_seed_z = ofRandom(1000);
 
-		auto noise_value = ofNoise(glm::vec4(triangle.getVertex(0) * 2, this->noise_param * 2.5));
-		int radius_end = noise_value < 0.7 ? radius_start : ofMap(noise_value, 0.7, 1, radius_start, radius_max);
+		auto noise_value = ofNoise(glm::vec4(triangle.getVertex(0) * 0.25, this->noise_param * 2.5));
+		int radius_end = noise_value < 0.85 ? radius_start + 10 : ofMap(noise_value, 0.85, 1, radius_start + 10, radius_max - 10);
 
 		this->frame.addVertex(glm::vec3());
 
@@ -43,7 +44,7 @@ void ofApp::update() {
 			auto mesh_index = this->face.getNumVertices();
 			auto frame_index = this->frame.getNumVertices();
 
-			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 6);
+			auto param = ofMap(radius, radius_start, radius_max, 0, PI * 3);
 
 			auto angle_x = ofMap(ofNoise(noise_seed_x, radius * 0.001 + this->noise_param), 0, 1, -param, param);
 			auto rotation_x = glm::rotate(glm::mat4(), angle_x, glm::vec3(1, 0, 0));
@@ -65,8 +66,8 @@ void ofApp::update() {
 
 			for (int i = 0; i < vertices.size(); i++) {
 
-				this->face.addColor(ofColor(39));
-				this->frame.addColor(ofColor(239, 239, 39));
+				this->face.addColor(ofColor(0));
+				this->frame.addColor(ofColor(39, 39, 239));
 			}
 
 			if (radius == radius_start || radius == radius_end) {
@@ -96,14 +97,14 @@ void ofApp::update() {
 		}
 	}
 
-	this->noise_param += 0.003;
+	this->noise_param += 0.0003;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(ofGetFrameNum() * 0.36);
+	ofRotateY(ofGetFrameNum() * 0.09);
 
 	this->frame.drawWireframe();
 	this->face.draw();
@@ -112,7 +113,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 10;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
