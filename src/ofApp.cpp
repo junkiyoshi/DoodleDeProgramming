@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -19,14 +19,12 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	for (auto z = -600; z <= 600; z += 10) {
+	float radius = 300;
+	for (auto z = -600; z <= 600; z += 20) {
 
-		for (auto radius = 300; radius <= 440; radius += 10) {
-
-			auto noise_value = ofNoise(z * 0.005, radius * 0.005, ofGetFrameNum() * 0.005);
-			auto len = noise_value > 0.9 ? 360 : ofMap(noise_value, 0, 0.9, -360, 360);
-			this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), 0, len, radius, 10, 10);
-		}
+		auto noise_value = ofNoise(z * 0.004 + ofGetFrameNum() * 0.01);
+		auto len = noise_value > 0.65 ? 360 : ofMap(noise_value, 0, 0.65, 0, 360);
+		this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), 0, len, radius, 100, 20);
 	}
 }
 
