@@ -4,45 +4,36 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
+	ofBackground(239);
+	ofSetLineWidth(3);
+	ofSetColor(0);
+	
+	for (int i = 0; i < 5000; i++) {
 
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+		auto particle = std::make_unique<Particle>();
+		this->particles.push_back(move(particle));
+	}
 }
+
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
+	for (auto& particle : this->particles) {
 
-	this->face.clear();
-	this->frame.clear();
-
-	float radius = 300;
-	for (auto z = -600; z <= 600; z += 20) {
-
-		auto noise_value = ofNoise(z * 0.004 + ofGetFrameNum() * 0.01);
-		auto len = noise_value > 0.65 ? 360 : ofMap(noise_value, 0, 0.65, 0, 360);
-		this->setRingToMesh(this->face, this->frame, glm::vec3(0, 0, z), 0, len, radius, 100, 20);
+		particle->update(this->particles);
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(270);
-	
-	ofSetColor(0);
-	this->face.draw();
+	for (auto& particle : this->particles) {
 
-	ofSetColor(255);
-	this->frame.drawWireframe();
+		particle->draw();
+	}
 
-	this->cam.end();
-
-	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
 	if (ofGetFrameNum() > start) {
@@ -57,75 +48,199 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
-	*/
 }
 
 //--------------------------------------------------------------
-void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, int deg_start, int deg_len, float radius, float width, float height) {
+Particle::Particle() {
 
-	if (deg_len < 1) {
+	this->location = glm::vec2(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()));
+	this->velocity = glm::vec2(ofRandom(-1, 1), ofRandom(-1, 1));
 
-		return;
+	this->range = 30;
+	this->max_force = 2;
+	this->max_speed = 12;
+}
+
+//--------------------------------------------------------------
+Particle::~Particle() {}
+
+//--------------------------------------------------------------
+void Particle::update(vector<std::unique_ptr<Particle>>& particles) {
+
+	// •ª—£
+	glm::vec2 separate = this->separate(particles);
+	this->applyForce(separate);
+
+	// ®—ñ
+	glm::vec2 align = this->align(particles);
+	this->applyForce(align);
+
+	// Œ‹‡
+	glm::vec2 cohesion = this->cohesion(particles);
+	this->applyForce(cohesion);
+
+	// Ž©‰ä
+	if (glm::length(this->velocity) > 0) {
+
+		glm::vec2 future = glm::normalize(this->velocity) * this->range;
+		future += this->location;
+
+		float angle = ofRandom(360);
+		glm::vec2 target = future + glm::vec2(this->range * 0.5 * cos(angle * DEG_TO_RAD), this->range * 0.5 * sin(angle * DEG_TO_RAD));
+
+		glm::vec2 ego = this->seek(target);
+		this->applyForce(ego);
 	}
 
-	for (int deg = deg_start; deg < deg_start + deg_len; deg += 1) {
+	// ‹«ŠE
+	if (glm::length(this->location - glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5)) > 500) {
 
-		auto face_index = face_target.getNumVertices();
+		glm::vec2 area = this->seek(glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5));
+		this->applyForce(area);
+	}
 
-		vector<glm::vec3> vertices;
-		vertices.push_back(glm::vec3((radius + width * 0.5) * cos(deg * DEG_TO_RAD), (radius + width * 0.5) * sin(deg * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3((radius + width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius + width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3((radius + width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius + width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * 0.5));
-		vertices.push_back(glm::vec3((radius + width * 0.5) * cos(deg * DEG_TO_RAD), (radius + width * 0.5) * sin(deg * DEG_TO_RAD), height * 0.5));
+	// ‘Oi
+	this->velocity += this->acceleration;
+	if (glm::length(this->velocity) > this->max_speed) {
 
-		vertices.push_back(glm::vec3((radius - width * 0.5) * cos(deg * DEG_TO_RAD), (radius - width * 0.5) * sin(deg * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3((radius - width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius - width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * -0.5));
-		vertices.push_back(glm::vec3((radius - width * 0.5) * cos((deg + 1) * DEG_TO_RAD), (radius - width * 0.5) * sin((deg + 1) * DEG_TO_RAD), height * 0.5));
-		vertices.push_back(glm::vec3((radius - width * 0.5) * cos(deg * DEG_TO_RAD), (radius - width * 0.5) * sin(deg * DEG_TO_RAD), height * 0.5));
+		this->velocity = glm::normalize(this->velocity) * this->max_speed;
+	}
+	this->location += this->velocity;
+	this->acceleration *= 0;
+	this->velocity *= 0.98;
 
-		for (auto& vertex : vertices) {
+	// ‹L˜^
+	this->log.push_back(this->location);
+	while (this->log.size() > 3) {
 
-			vertex = location + vertex;
-		}
+		this->log.erase(this->log.begin());
+	}
+}
 
-		face_target.addVertices(vertices);
+//--------------------------------------------------------------
+void Particle::draw() {
 
-		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 1); face_target.addIndex(face_index + 2);
-		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 2); face_target.addIndex(face_index + 3);
+	if (this->log.size() < 2) { return; }
 
-		face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 6);
-		face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 7);
+	for (int i = 1; i < this->log.size(); i++) {
 
-		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 4); face_target.addIndex(face_index + 5);
-		face_target.addIndex(face_index + 0); face_target.addIndex(face_index + 5); face_target.addIndex(face_index + 1);
+		ofDrawLine(this->log[i - 1], this->log[i]);
+	}
+}
 
-		face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 7); face_target.addIndex(face_index + 6);
-		face_target.addIndex(face_index + 3); face_target.addIndex(face_index + 6); face_target.addIndex(face_index + 2);
+//--------------------------------------------------------------
+glm::vec2 Particle::separate(vector<std::unique_ptr<Particle>>& particles) {
 
-		auto frame_index = frame_target.getNumVertices();
+	glm::vec2 result;
+	glm::vec2 sum;
+	int count = 0;
+	for (auto& other : particles) {
 
-		frame_target.addVertices(vertices);
+		glm::vec2 difference = this->location - other->location;
+		if (glm::length(difference) > 0 && glm::length(difference) < this->range * 0.5) {
 
-		frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 1);
-		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
-		frame_target.addIndex(frame_index + 4); frame_target.addIndex(frame_index + 5);
-		frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 7);
-
-		if (deg == deg_start) {
-
-			frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 3);
-			frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 4);
-			frame_target.addIndex(frame_index + 7); frame_target.addIndex(frame_index + 3);
-			frame_target.addIndex(frame_index + 7); frame_target.addIndex(frame_index + 4);
+			sum += glm::normalize(difference);
+			count++;
 		}
 	}
 
-	auto frame_index = this->frame.getNumVertices() - 8;
+	if (count > 0) {
 
-	frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 2);
-	frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 5);
-	frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 2);
-	frame_target.addIndex(frame_index + 6); frame_target.addIndex(frame_index + 5);
+		glm::vec2 avg = sum / count;
+		avg = avg * this->max_speed;
+		if (glm::length(avg) > this->max_speed) {
+
+			avg = glm::normalize(avg) * this->max_speed;
+		}
+		glm::vec2 steer = avg - this->velocity;
+		if (glm::length(steer) > this->max_force) {
+
+			steer = glm::normalize(steer) * this->max_force;
+		}
+		result = steer;
+	}
+
+	return result;
+}
+
+//--------------------------------------------------------------
+glm::vec2 Particle::align(vector<std::unique_ptr<Particle>>& particles) {
+
+	glm::vec2 result;
+	glm::vec2 sum;
+	int count = 0;
+	for (auto& other : particles) {
+
+		glm::vec2 difference = this->location - other->location;
+		if (glm::length(difference) > 0 && glm::length(difference) < this->range) {
+
+			sum += other->velocity;
+			count++;
+		}
+	}
+
+	if (count > 0) {
+
+		glm::vec2 avg = sum / count;
+		avg = avg * this->max_speed;
+		if (glm::length(avg) > this->max_speed) {
+
+			avg = glm::normalize(avg) * this->max_speed;
+		}
+		glm::vec2 steer = avg - this->velocity;
+		if (glm::length(steer) > this->max_force) {
+
+			steer = glm::normalize(steer) * this->max_force;
+		}
+		result = steer;
+	}
+
+	return result;
+}
+
+//--------------------------------------------------------------
+glm::vec2 Particle::cohesion(vector<std::unique_ptr<Particle>>& particles) {
+
+	glm::vec2 result;
+	glm::vec2 sum;
+	int count = 0;
+	for (auto& other : particles) {
+
+		glm::vec2 difference = this->location - other->location;
+		if (glm::length(difference) > 0 && glm::length(difference) < this->range * 0.5) {
+
+			sum += other->location;
+			count++;
+		}
+	}
+
+	if (count > 0) {
+
+		result = this->seek(sum / count);
+	}
+
+	return result;
+}
+
+//--------------------------------------------------------------
+glm::vec2 Particle::seek(glm::vec2 target) {
+
+	glm::vec2 desired = target - this->location;
+	float distance = glm::length(desired);
+	desired = glm::normalize(desired);
+	desired *= distance < this->range ? ofMap(distance, 0, this->range, 0, this->max_speed) : max_speed;
+	glm::vec2 steer = desired - this->velocity;
+	if (glm::length(steer) > this->max_force) {
+
+		steer = glm::normalize(steer) * this->max_force;
+	}
+	return steer;
+}
+
+//--------------------------------------------------------------
+void Particle::applyForce(glm::vec2 force) {
+
+	this->acceleration += force;
 }
 
 //--------------------------------------------------------------

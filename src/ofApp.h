@@ -1,6 +1,30 @@
 #pragma once
 #include "ofMain.h"
 
+class Particle {
+public:
+	Particle();
+	~Particle();
+
+	void update(vector<std::unique_ptr<Particle>>& particles);
+	void draw();
+	glm::vec2 separate(vector<std::unique_ptr<Particle>>& particles);
+	glm::vec2 align(vector<std::unique_ptr<Particle>>& particles);
+	glm::vec2 cohesion(vector<std::unique_ptr<Particle>>& particles);
+	glm::vec2 seek(glm::vec2 target);
+	void applyForce(glm::vec2 force);
+
+private:
+	glm::vec2 location;
+	glm::vec2 velocity;
+	glm::vec2 acceleration;
+	vector<glm::vec2> log;
+
+	float range;
+	float max_force;
+	float max_speed;
+};
+
 class ofApp : public ofBaseApp {
 
 public:
@@ -14,14 +38,9 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
-	void mouseEntered(int x, int y) {};
-	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, int deg_start, int deg_len, float radius, float width, float height);
-
-	ofEasyCam cam;
-	ofMesh face, frame;
+	vector<std::unique_ptr<Particle>> particles;
 };
