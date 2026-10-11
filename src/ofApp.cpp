@@ -6,11 +6,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(3);
-	ofSetColor(0);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 	
-	for (int i = 0; i < 5000; i++) {
+	for (int i = 0; i < 150; i++) {
 
 		auto particle = std::make_unique<Particle>();
 		this->particles.push_back(move(particle));
@@ -34,8 +33,9 @@ void ofApp::draw() {
 		particle->draw();
 	}
 
+	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 1500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -48,17 +48,22 @@ void ofApp::draw() {
 			std::exit(1);
 		}
 	}
+	*/
 }
 
 //--------------------------------------------------------------
 Particle::Particle() {
 
-	this->location = glm::vec2(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()));
+	this->location = glm::vec2(ofRandom(100), ofRandom(100));
 	this->velocity = glm::vec2(ofRandom(-1, 1), ofRandom(-1, 1));
 
-	this->range = 30;
+	this->range = 100;
 	this->max_force = 2;
-	this->max_speed = 12;
+	this->max_speed = 24;
+
+	ofColor color;
+	color.setHsb(ofRandom(200, 255), 255, 255);
+	this->color = color;
 }
 
 //--------------------------------------------------------------
@@ -93,7 +98,7 @@ void Particle::update(vector<std::unique_ptr<Particle>>& particles) {
 	}
 
 	// ‹«ŠE
-	if (glm::length(this->location - glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5)) > 500) {
+	if (glm::length(this->location - glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5)) > 300) {
 
 		glm::vec2 area = this->seek(glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5));
 		this->applyForce(area);
@@ -111,7 +116,7 @@ void Particle::update(vector<std::unique_ptr<Particle>>& particles) {
 
 	// ‹L˜^
 	this->log.push_back(this->location);
-	while (this->log.size() > 3) {
+	while (this->log.size() > 10) {
 
 		this->log.erase(this->log.begin());
 	}
@@ -122,8 +127,11 @@ void Particle::draw() {
 
 	if (this->log.size() < 2) { return; }
 
+	ofSetColor(this->color);
+
 	for (int i = 1; i < this->log.size(); i++) {
 
+		ofSetLineWidth(ofMap(i, 1, this->log.size(), 0.25, 4));
 		ofDrawLine(this->log[i - 1], this->log[i]);
 	}
 }

@@ -23,6 +23,8 @@ private:
 	float range;
 	float max_force;
 	float max_speed;
+	
+	ofColor color;
 };
 
 class ofApp : public ofBaseApp {
