@@ -6,36 +6,148 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
-	
-	for (int i = 0; i < 150; i++) {
+	ofBackground(239);
+	ofEnableDepthTest();
 
-		auto particle = std::make_unique<Particle>();
-		this->particles.push_back(move(particle));
-	}
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	for (auto& particle : this->particles) {
+	ofSeedRandom(39);
 
-		particle->update(this->particles);
+	this->face.clear();
+	this->frame.clear();
+
+	float span = 0.5;
+	float threshold_1 = 0.45;
+	float threshold_2 = 0.55;
+	float frame_param = ofGetFrameNum() * 0.05;
+	float coordinate_param = 0.01;
+	float len = 170;
+	float angle;
+	glm::highp_mat4 rotation;
+	ofColor face_color(0), frame_color;
+
+	for (float z = -len; z <= len; z += 17) {
+
+		for (float x = -len; x <= len; x += span) {
+
+			for (float y = -len; y <= len; y += span) {
+
+				frame_color = ofColor(ofMap(z, -len, len, 239, 39));
+
+				glm::vec3 noise_location = glm::vec4(x, y, z, 0) * rotation;
+				auto noise_value = ofNoise(glm::vec4(
+					noise_location.x * coordinate_param,
+					noise_location.y * coordinate_param,
+					noise_location.z * coordinate_param * 0.25,
+					frame_param));
+				if (noise_value < threshold_1 || noise_value > threshold_2) { continue; }
+
+				glm::vec3 loc_1 = glm::vec4(x - span, y, z, 0) * rotation;
+				auto noise_1 = ofNoise(glm::vec4(
+					loc_1.x * coordinate_param,
+					loc_1.y * coordinate_param,
+					loc_1.z * coordinate_param * 0.25,
+					frame_param));
+				glm::vec3 loc_2 = glm::vec4(x, y + span, z, 0) * rotation;
+				auto noise_2 = ofNoise(glm::vec4(
+					loc_2.x * coordinate_param,
+					loc_2.y * coordinate_param,
+					loc_2.z * coordinate_param * 0.25,
+					frame_param));
+				glm::vec3 loc_3 = glm::vec4(x + span, y, z, 0) * rotation;
+				auto noise_3 = ofNoise(glm::vec4(
+					loc_3.x * coordinate_param,
+					loc_3.y * coordinate_param,
+					loc_3.z * coordinate_param * 0.25,
+					frame_param));
+				glm::vec3 loc_4 = glm::vec4(x, y - span, z, 0) * rotation;
+				auto noise_4 = ofNoise(glm::vec4(
+					loc_4.x * coordinate_param,
+					loc_4.y * coordinate_param,
+					loc_4.z * coordinate_param * 0.25,
+					frame_param));
+
+				auto index = this->face.getNumVertices();
+				vector<glm::vec3> vertices;
+
+				vertices.push_back(glm::vec4(x - span * 0.5, y - span * 0.5, z, 0) * rotation);
+				vertices.push_back(glm::vec4(x + span * 0.5, y - span * 0.5, z, 0) * rotation);
+				vertices.push_back(glm::vec4(x + span * 0.5, y + span * 0.5, z, 0) * rotation);
+				vertices.push_back(glm::vec4(x - span * 0.5, y + span * 0.5, z, 0) * rotation);
+
+				this->face.addVertices(vertices);
+
+				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 2);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
+
+				this->face.addColor(face_color); this->face.addColor(face_color);
+				this->face.addColor(face_color); this->face.addColor(face_color);
+
+				if (noise_1 < threshold_1 || noise_1 > threshold_2 || x == -len) {
+
+					this->frame.addVertex(vertices[0]);
+					this->frame.addVertex(vertices[3]);
+
+					this->frame.addIndex(this->frame.getNumVertices() - 1);
+					this->frame.addIndex(this->frame.getNumVertices() - 2);
+
+					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
+				}
+
+				if (noise_2 < threshold_1 || noise_2 > threshold_2 || y == len) {
+
+					this->frame.addVertex(vertices[2]);
+					this->frame.addVertex(vertices[3]);
+
+					this->frame.addIndex(this->frame.getNumVertices() - 1);
+					this->frame.addIndex(this->frame.getNumVertices() - 2);
+
+					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
+				}
+
+				if (noise_3 < threshold_1 || noise_3 > threshold_2 || x == len) {
+
+					this->frame.addVertex(vertices[1]);
+					this->frame.addVertex(vertices[2]);
+
+					this->frame.addIndex(this->frame.getNumVertices() - 1);
+					this->frame.addIndex(this->frame.getNumVertices() - 2);
+
+					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
+				}
+
+				if (noise_4 < threshold_1 || noise_4 > threshold_2 || y == -len) {
+
+					this->frame.addVertex(vertices[0]);
+					this->frame.addVertex(vertices[1]);
+
+					this->frame.addIndex(this->frame.getNumVertices() - 1);
+					this->frame.addIndex(this->frame.getNumVertices() - 2);
+
+					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
+				}
+			}
+
+		}
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	for (auto& particle : this->particles) {
+	this->cam.begin();
+	this->cam.setPosition(glm::vec3(0, 0, 500));
 
-		particle->draw();
-	}
+	this->frame.draw();
+	this->face.draw();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 1500;
+	int start = 5;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -49,206 +161,8 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
 
-//--------------------------------------------------------------
-Particle::Particle() {
-
-	this->location = glm::vec2(ofRandom(100), ofRandom(100));
-	this->velocity = glm::vec2(ofRandom(-1, 1), ofRandom(-1, 1));
-
-	this->range = 100;
-	this->max_force = 2;
-	this->max_speed = 24;
-
-	ofColor color;
-	color.setHsb(ofRandom(200, 255), 255, 255);
-	this->color = color;
-}
-
-//--------------------------------------------------------------
-Particle::~Particle() {}
-
-//--------------------------------------------------------------
-void Particle::update(vector<std::unique_ptr<Particle>>& particles) {
-
-	// •ª—£
-	glm::vec2 separate = this->separate(particles);
-	this->applyForce(separate);
-
-	// ®—ñ
-	glm::vec2 align = this->align(particles);
-	this->applyForce(align);
-
-	// Œ‹‡
-	glm::vec2 cohesion = this->cohesion(particles);
-	this->applyForce(cohesion);
-
-	// Ž©‰ä
-	if (glm::length(this->velocity) > 0) {
-
-		glm::vec2 future = glm::normalize(this->velocity) * this->range;
-		future += this->location;
-
-		float angle = ofRandom(360);
-		glm::vec2 target = future + glm::vec2(this->range * 0.5 * cos(angle * DEG_TO_RAD), this->range * 0.5 * sin(angle * DEG_TO_RAD));
-
-		glm::vec2 ego = this->seek(target);
-		this->applyForce(ego);
-	}
-
-	// ‹«ŠE
-	if (glm::length(this->location - glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5)) > 300) {
-
-		glm::vec2 area = this->seek(glm::vec2(ofGetWidth() * 0.5, ofGetHeight() * 0.5));
-		this->applyForce(area);
-	}
-
-	// ‘Oi
-	this->velocity += this->acceleration;
-	if (glm::length(this->velocity) > this->max_speed) {
-
-		this->velocity = glm::normalize(this->velocity) * this->max_speed;
-	}
-	this->location += this->velocity;
-	this->acceleration *= 0;
-	this->velocity *= 0.98;
-
-	// ‹L˜^
-	this->log.push_back(this->location);
-	while (this->log.size() > 10) {
-
-		this->log.erase(this->log.begin());
-	}
-}
-
-//--------------------------------------------------------------
-void Particle::draw() {
-
-	if (this->log.size() < 2) { return; }
-
-	ofSetColor(this->color);
-
-	for (int i = 1; i < this->log.size(); i++) {
-
-		ofSetLineWidth(ofMap(i, 1, this->log.size(), 0.25, 4));
-		ofDrawLine(this->log[i - 1], this->log[i]);
-	}
-}
-
-//--------------------------------------------------------------
-glm::vec2 Particle::separate(vector<std::unique_ptr<Particle>>& particles) {
-
-	glm::vec2 result;
-	glm::vec2 sum;
-	int count = 0;
-	for (auto& other : particles) {
-
-		glm::vec2 difference = this->location - other->location;
-		if (glm::length(difference) > 0 && glm::length(difference) < this->range * 0.5) {
-
-			sum += glm::normalize(difference);
-			count++;
-		}
-	}
-
-	if (count > 0) {
-
-		glm::vec2 avg = sum / count;
-		avg = avg * this->max_speed;
-		if (glm::length(avg) > this->max_speed) {
-
-			avg = glm::normalize(avg) * this->max_speed;
-		}
-		glm::vec2 steer = avg - this->velocity;
-		if (glm::length(steer) > this->max_force) {
-
-			steer = glm::normalize(steer) * this->max_force;
-		}
-		result = steer;
-	}
-
-	return result;
-}
-
-//--------------------------------------------------------------
-glm::vec2 Particle::align(vector<std::unique_ptr<Particle>>& particles) {
-
-	glm::vec2 result;
-	glm::vec2 sum;
-	int count = 0;
-	for (auto& other : particles) {
-
-		glm::vec2 difference = this->location - other->location;
-		if (glm::length(difference) > 0 && glm::length(difference) < this->range) {
-
-			sum += other->velocity;
-			count++;
-		}
-	}
-
-	if (count > 0) {
-
-		glm::vec2 avg = sum / count;
-		avg = avg * this->max_speed;
-		if (glm::length(avg) > this->max_speed) {
-
-			avg = glm::normalize(avg) * this->max_speed;
-		}
-		glm::vec2 steer = avg - this->velocity;
-		if (glm::length(steer) > this->max_force) {
-
-			steer = glm::normalize(steer) * this->max_force;
-		}
-		result = steer;
-	}
-
-	return result;
-}
-
-//--------------------------------------------------------------
-glm::vec2 Particle::cohesion(vector<std::unique_ptr<Particle>>& particles) {
-
-	glm::vec2 result;
-	glm::vec2 sum;
-	int count = 0;
-	for (auto& other : particles) {
-
-		glm::vec2 difference = this->location - other->location;
-		if (glm::length(difference) > 0 && glm::length(difference) < this->range * 0.5) {
-
-			sum += other->location;
-			count++;
-		}
-	}
-
-	if (count > 0) {
-
-		result = this->seek(sum / count);
-	}
-
-	return result;
-}
-
-//--------------------------------------------------------------
-glm::vec2 Particle::seek(glm::vec2 target) {
-
-	glm::vec2 desired = target - this->location;
-	float distance = glm::length(desired);
-	desired = glm::normalize(desired);
-	desired *= distance < this->range ? ofMap(distance, 0, this->range, 0, this->max_speed) : max_speed;
-	glm::vec2 steer = desired - this->velocity;
-	if (glm::length(steer) > this->max_force) {
-
-		steer = glm::normalize(steer) * this->max_force;
-	}
-	return steer;
-}
-
-//--------------------------------------------------------------
-void Particle::applyForce(glm::vec2 force) {
-
-	this->acceleration += force;
+	this->cam.end();
 }
 
 //--------------------------------------------------------------
