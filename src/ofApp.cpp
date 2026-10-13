@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -20,15 +20,14 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	float span = 0.5;
+	float span = 1;
 	float threshold_1 = 0.45;
 	float threshold_2 = 0.55;
-	float frame_param = ofGetFrameNum() * 0.05;
+	float frame_param = ofGetFrameNum() * -0.02;
 	float coordinate_param = 0.01;
 	float len = 170;
 	float angle;
-	glm::highp_mat4 rotation;
-	ofColor face_color(0), frame_color;
+	ofColor face_color(0), frame_color(239);
 
 	for (float z = -len; z <= len; z += 17) {
 
@@ -36,48 +35,29 @@ void ofApp::update() {
 
 			for (float y = -len; y <= len; y += span) {
 
-				frame_color = ofColor(ofMap(z, -len, len, 239, 39));
-
-				glm::vec3 noise_location = glm::vec4(x, y, z, 0) * rotation;
-				auto noise_value = ofNoise(glm::vec4(
-					noise_location.x * coordinate_param,
-					noise_location.y * coordinate_param,
-					noise_location.z * coordinate_param * 0.25,
-					frame_param));
+				auto radius = glm::length(glm::vec3(x, y, z));
+				auto noise_value = ofNoise(radius * coordinate_param + frame_param);
 				if (noise_value < threshold_1 || noise_value > threshold_2) { continue; }
 
-				glm::vec3 loc_1 = glm::vec4(x - span, y, z, 0) * rotation;
-				auto noise_1 = ofNoise(glm::vec4(
-					loc_1.x * coordinate_param,
-					loc_1.y * coordinate_param,
-					loc_1.z * coordinate_param * 0.25,
-					frame_param));
-				glm::vec3 loc_2 = glm::vec4(x, y + span, z, 0) * rotation;
-				auto noise_2 = ofNoise(glm::vec4(
-					loc_2.x * coordinate_param,
-					loc_2.y * coordinate_param,
-					loc_2.z * coordinate_param * 0.25,
-					frame_param));
-				glm::vec3 loc_3 = glm::vec4(x + span, y, z, 0) * rotation;
-				auto noise_3 = ofNoise(glm::vec4(
-					loc_3.x * coordinate_param,
-					loc_3.y * coordinate_param,
-					loc_3.z * coordinate_param * 0.25,
-					frame_param));
-				glm::vec3 loc_4 = glm::vec4(x, y - span, z, 0) * rotation;
-				auto noise_4 = ofNoise(glm::vec4(
-					loc_4.x * coordinate_param,
-					loc_4.y * coordinate_param,
-					loc_4.z * coordinate_param * 0.25,
-					frame_param));
+				auto radius_1 = glm::length(glm::vec3(x - span, y, z));
+				auto noise_1 = ofNoise(radius_1 * coordinate_param + frame_param);
 
+				auto radius_2 = glm::length(glm::vec3(x, y + span, z));
+				auto noise_2 = ofNoise(radius_2 * coordinate_param + frame_param);
+
+				auto radius_3 = glm::length(glm::vec3(x + span, y, z));
+				auto noise_3 = ofNoise(radius_3 * coordinate_param + frame_param);
+
+				auto radius_4 = glm::length(glm::vec3(x, y - span, z));
+				auto noise_4 = ofNoise(radius_4 * coordinate_param + frame_param);
+				
 				auto index = this->face.getNumVertices();
 				vector<glm::vec3> vertices;
 
-				vertices.push_back(glm::vec4(x - span * 0.5, y - span * 0.5, z, 0) * rotation);
-				vertices.push_back(glm::vec4(x + span * 0.5, y - span * 0.5, z, 0) * rotation);
-				vertices.push_back(glm::vec4(x + span * 0.5, y + span * 0.5, z, 0) * rotation);
-				vertices.push_back(glm::vec4(x - span * 0.5, y + span * 0.5, z, 0) * rotation);
+				vertices.push_back(glm::vec4(x - span * 0.5, y - span * 0.5, z, 0));
+				vertices.push_back(glm::vec4(x + span * 0.5, y - span * 0.5, z, 0));
+				vertices.push_back(glm::vec4(x + span * 0.5, y + span * 0.5, z, 0));
+				vertices.push_back(glm::vec4(x - span * 0.5, y + span * 0.5, z, 0));
 
 				this->face.addVertices(vertices);
 
@@ -140,7 +120,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	this->cam.setPosition(glm::vec3(0, 0, 500));
+	ofRotateX(310);
 
 	this->frame.draw();
 	this->face.draw();
