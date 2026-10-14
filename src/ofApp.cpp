@@ -4,126 +4,53 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openFrameworks");
+	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
+	ofBackground(239);
 
-	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	this->hexagon_height = 32;
+	this->hexagon_width = 12;
+
+	for (float x = this->hexagon_width + 10; x <= ofGetWidth(); x += this->hexagon_height * 1.5) {
+
+		for (float y = this->hexagon_height + 40; y <= ofGetHeight(); y += this->hexagon_height * 3) {
+
+			this->number_list.push_back(std::make_pair(glm::vec2(x, y), 10));
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
 	ofSeedRandom(39);
-
-	this->face.clear();
-	this->frame.clear();
-
-	float span = 1;
-	float threshold_1 = 0.45;
-	float threshold_2 = 0.55;
-	float frame_param = ofGetFrameNum() * -0.02;
-	float coordinate_param = 0.01;
-	float len = 170;
-	float angle;
-	ofColor face_color(0), frame_color(239);
-
-	for (float z = -len; z <= len; z += 17) {
-
-		for (float x = -len; x <= len; x += span) {
-
-			for (float y = -len; y <= len; y += span) {
-
-				auto radius = glm::length(glm::vec3(x, y, z));
-				auto noise_value = ofNoise(radius * coordinate_param + frame_param);
-				if (noise_value < threshold_1 || noise_value > threshold_2) { continue; }
-
-				auto radius_1 = glm::length(glm::vec3(x - span, y, z));
-				auto noise_1 = ofNoise(radius_1 * coordinate_param + frame_param);
-
-				auto radius_2 = glm::length(glm::vec3(x, y + span, z));
-				auto noise_2 = ofNoise(radius_2 * coordinate_param + frame_param);
-
-				auto radius_3 = glm::length(glm::vec3(x + span, y, z));
-				auto noise_3 = ofNoise(radius_3 * coordinate_param + frame_param);
-
-				auto radius_4 = glm::length(glm::vec3(x, y - span, z));
-				auto noise_4 = ofNoise(radius_4 * coordinate_param + frame_param);
-				
-				auto index = this->face.getNumVertices();
-				vector<glm::vec3> vertices;
-
-				vertices.push_back(glm::vec4(x - span * 0.5, y - span * 0.5, z, 0));
-				vertices.push_back(glm::vec4(x + span * 0.5, y - span * 0.5, z, 0));
-				vertices.push_back(glm::vec4(x + span * 0.5, y + span * 0.5, z, 0));
-				vertices.push_back(glm::vec4(x - span * 0.5, y + span * 0.5, z, 0));
-
-				this->face.addVertices(vertices);
-
-				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 2);
-				this->face.addIndex(index + 0); this->face.addIndex(index + 2); this->face.addIndex(index + 3);
-
-				this->face.addColor(face_color); this->face.addColor(face_color);
-				this->face.addColor(face_color); this->face.addColor(face_color);
-
-				if (noise_1 < threshold_1 || noise_1 > threshold_2 || x == -len) {
-
-					this->frame.addVertex(vertices[0]);
-					this->frame.addVertex(vertices[3]);
-
-					this->frame.addIndex(this->frame.getNumVertices() - 1);
-					this->frame.addIndex(this->frame.getNumVertices() - 2);
-
-					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
-				}
-
-				if (noise_2 < threshold_1 || noise_2 > threshold_2 || y == len) {
-
-					this->frame.addVertex(vertices[2]);
-					this->frame.addVertex(vertices[3]);
-
-					this->frame.addIndex(this->frame.getNumVertices() - 1);
-					this->frame.addIndex(this->frame.getNumVertices() - 2);
-
-					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
-				}
-
-				if (noise_3 < threshold_1 || noise_3 > threshold_2 || x == len) {
-
-					this->frame.addVertex(vertices[1]);
-					this->frame.addVertex(vertices[2]);
-
-					this->frame.addIndex(this->frame.getNumVertices() - 1);
-					this->frame.addIndex(this->frame.getNumVertices() - 2);
-
-					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
-				}
-
-				if (noise_4 < threshold_1 || noise_4 > threshold_2 || y == -len) {
-
-					this->frame.addVertex(vertices[0]);
-					this->frame.addVertex(vertices[1]);
-
-					this->frame.addIndex(this->frame.getNumVertices() - 1);
-					this->frame.addIndex(this->frame.getNumVertices() - 2);
-
-					this->frame.addColor(frame_color); this->frame.addColor(frame_color);
-				}
-			}
-
-		}
-	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(310);
+	ofPushMatrix();
+	ofTranslate(10, 5);
 
-	this->frame.draw();
-	this->face.draw();
+	for (auto& number : this->number_list) {
+
+		if (number.second > 0) {
+
+			int number_index = ofMap(ofNoise(number.first.y, number.first.x * 0.001 - ofGetFrameNum() * 0.025), 0, 1, 0, 10);
+			this->draw_digital(number.first, number_index, ofColor(180), ofColor(180, 0));
+		}
+	}
+
+	ofPopMatrix();
+
+	for (auto& number : this->number_list) {
+
+		if (number.second > 0) {
+
+			int number_index = ofMap(ofNoise(number.first.y, number.first.x * 0.001 - ofGetFrameNum() * 0.025), 0, 1, 0, 10);
+			this->draw_digital(number.first, number_index, ofColor(0), ofColor(255));
+		}
+	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -141,8 +68,70 @@ void ofApp::draw() {
 		}
 	}
 	*/
+}
 
-	this->cam.end();
+//--------------------------------------------------------------
+void ofApp::draw_digital(glm::vec2 location, int number_index, ofColor fill_color, ofColor no_fill_color) {
+
+	vector<pair<glm::vec2, float>> part_list = {
+		std::make_pair<glm::vec2, float>(location + glm::vec2(0, -this->hexagon_height), 90),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * 0.5), 0),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * 0.5), 0),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(0, 0), 90),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(this->hexagon_height * -0.5, this->hexagon_height * -0.5), 0),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(this->hexagon_height * 0.5, this->hexagon_height * -0.5), 0),
+		std::make_pair<glm::vec2, float>(location + glm::vec2(0, this->hexagon_height), 90)
+	};
+
+	vector<vector<int>> index_list = {
+		{ 0, 1, 2, 4, 5, 6 },
+		{ 2, 5 },
+		{ 0, 1, 3, 5, 6 },
+		{ 0, 2, 3, 5, 6 },
+		{ 2, 3, 4, 5 },
+		{ 0, 2, 3, 4, 6 },
+		{ 0, 1, 2, 3, 4, 6 },
+		{ 0, 2, 5 },
+		{ 0, 1, 2, 3, 4, 5, 6 },
+		{ 0, 2, 3, 4, 5, 6 },
+	};
+
+	for (auto& index : index_list[number_index]) {
+
+		this->draw_hexagon(part_list[index].first, part_list[index].second, fill_color, no_fill_color);
+	}
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_hexagon(glm::vec2 location, float deg, ofColor fill_color, ofColor no_fill_color) {
+
+	ofPushMatrix();
+	ofTranslate(location);
+	ofRotate(deg);
+
+	vector<glm::vec2> vertices;
+	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * -0.4));
+	vertices.push_back(glm::vec2(this->hexagon_width * -0.4, this->hexagon_height * 0.4));
+	vertices.push_back(glm::vec2(0, this->hexagon_height * 0.5));
+	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * 0.4));
+	vertices.push_back(glm::vec2(this->hexagon_width * 0.4, this->hexagon_height * -0.4));
+	vertices.push_back(glm::vec2(0, this->hexagon_height * -0.5));
+
+	ofFill();
+	ofSetColor(fill_color);
+
+	ofBeginShape();
+	ofVertices(vertices);
+	ofEndShape(true);
+
+	ofNoFill();
+	ofSetColor(no_fill_color);
+
+	ofBeginShape();
+	ofVertices(vertices);
+	ofEndShape(true);
+
+	ofPopMatrix();
 }
 
 //--------------------------------------------------------------
