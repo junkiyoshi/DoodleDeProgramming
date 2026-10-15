@@ -6,14 +6,14 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 
-	this->hexagon_height = 32;
-	this->hexagon_width = 12;
+	this->hexagon_height = 16;
+	this->hexagon_width = 6;
 
-	for (float x = this->hexagon_width + 10; x <= ofGetWidth(); x += this->hexagon_height * 1.5) {
+	for (float x = this->hexagon_width + 5; x <= ofGetWidth(); x += this->hexagon_height * 1.5) {
 
-		for (float y = this->hexagon_height + 40; y <= ofGetHeight(); y += this->hexagon_height * 3) {
+		for (float y = this->hexagon_height + 5; y <= ofGetHeight(); y += this->hexagon_height * 3) {
 
 			this->number_list.push_back(std::make_pair(glm::vec2(x, y), 10));
 		}
@@ -29,26 +29,12 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofPushMatrix();
-	ofTranslate(10, 5);
-
 	for (auto& number : this->number_list) {
 
 		if (number.second > 0) {
 
-			int number_index = ofMap(ofNoise(number.first.y, number.first.x * 0.001 - ofGetFrameNum() * 0.025), 0, 1, 0, 10);
-			this->draw_digital(number.first, number_index, ofColor(180), ofColor(180, 0));
-		}
-	}
-
-	ofPopMatrix();
-
-	for (auto& number : this->number_list) {
-
-		if (number.second > 0) {
-
-			int number_index = ofMap(ofNoise(number.first.y, number.first.x * 0.001 - ofGetFrameNum() * 0.025), 0, 1, 0, 10);
-			this->draw_digital(number.first, number_index, ofColor(0), ofColor(255));
+			int number_index = ofMap(ofNoise(number.first.x * 10, number.first.y * 0.0001 - ofGetFrameNum() * 0.005), 0, 1, 0, 10);
+			this->draw_digital(number.first, number_index, ofColor(39, 239, 39), ofColor(0));
 		}
 	}
 
