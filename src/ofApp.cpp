@@ -6,43 +6,48 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(3);
-	ofSetColor(0);
-	ofFill();
+	ofBackground(39);
 
-	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 400, true, true, true);
+	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 525, true, true, true);
 
-	ofFbo fbo;
-	fbo.allocate(ofGetWidth(), ofGetHeight());
-	fbo.begin();
-	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
-	ofClear(0);
-	ofSetColor(0);
-
-	auto word = "25";
-	this->font.drawString(word, font.stringWidth(word) * -0.5, font.stringHeight(word) - 200);
-
-	fbo.end();
-	auto span = 12;
-	ofPixels pixels;
-	fbo.readToPixels(pixels);
-	for (int x = 0; x < 720; x += span) {
-
-		for (int y = 0; y < 720; y += span) {
-
-			ofColor color = pixels.getColor(x, y);
-			if (color != ofColor(0, 0)) {
-
-				this->font_location_list.push_back(glm::vec3(x - ofGetWidth() * 0.5, y - ofGetHeight() * 0.5, 0));
-			}
-		}
-	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	ofSeedRandom(39);
+
+	if (ofGetFrameNum() % 25 == 0) {
+
+		this->location_list.clear();
+
+		ofFbo fbo;
+		fbo.allocate(ofGetWidth(), ofGetHeight());
+		fbo.begin();
+		ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
+		ofClear(0);
+		ofSetColor(0);
+
+		string word = ofGetFrameNum() % 50 == 0 ? "2" : "5";
+		font.drawString(word, font.stringWidth(word) * -0.5, font.stringHeight(word) - 300);
+
+		fbo.end();
+
+		auto span = 20;
+		ofPixels pixels;
+		fbo.readToPixels(pixels);
+		for (int x = 60; x < 700; x += span) {
+
+			for (int y = 0; y < 720; y += span) {
+
+				ofColor color = pixels.getColor(x, y);
+				if (color != ofColor(0, 0)) {
+
+					this->location_list.push_back(glm::vec3(x - ofGetWidth() * 0.5, y - ofGetHeight() * 0.45, 0));
+				}
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------
@@ -50,55 +55,41 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	for (int i = 0; i < this->font_location_list.size(); i++) {
+	int span = 20;
+	ofColor color;
+	for (auto& location : this->location_list) {
 
-		ofPushMatrix();
-		ofTranslate(this->font_location_list[i]);
+		auto x = location.x;
+		auto y = location.y;
 
-		auto span = 12;
-		auto len = span / 2;
-		auto noise_span = 0.02;
-		auto noise_value = ofNoise(this->font_location_list[i].x * noise_span, this->font_location_list[i].y * noise_span, ofGetFrameNum() * 0.005);
+		auto p = ofGetFrameNum() % 25;
+		auto next_p = (ofGetFrameNum() + 1) % 25;
 
-		auto loc_1 = glm::vec2((this->font_location_list[i].x - span), this->font_location_list[i].y - span);
-		auto noise_1 = ofNoise(loc_1.x * noise_span, loc_1.y * noise_span, ofGetFrameNum() * 0.005);
-		auto find_loc_1 = std::find(this->font_location_list.begin(), this->font_location_list.end(), loc_1) == this->font_location_list.end();
+		auto param = p < 5 ? 0 : p < 15 ? ofMap(p, 5, 15, 0, 1) : p < 20 ? 1 : ofMap(p, 20, 25, 1, 0);
+		auto next_param = next_p < 5 ? 0 : next_p < 15 ? ofMap(next_p, 5, 15, 0, 1) : next_p < 20 ? 1 : ofMap(next_p, 20, 25, 1, 0);
 
-		auto loc_2 = glm::vec2((this->font_location_list[i].x + span), this->font_location_list[i].y + span);
-		auto noise_2 = ofNoise(loc_2.x * noise_span, loc_2.y * noise_span, ofGetFrameNum() * 0.005);
-		auto find_loc_2 = std::find(this->font_location_list.begin(), this->font_location_list.end(), loc_2) == this->font_location_list.end();
+		auto noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
 
-		auto loc_3 = glm::vec2((this->font_location_list[i].x - span), this->font_location_list[i].y + span);
-		auto noise_3 = ofNoise(loc_3.x * noise_span, loc_3.y * noise_span, ofGetFrameNum() * 0.005);
-		auto find_loc_3 = std::find(this->font_location_list.begin(), this->font_location_list.end(), loc_3) == this->font_location_list.end();
+		auto param_x = ofMap(ofNoise(noise_seed.x, ofGetFrameNum() * 0.01), 0, 1, span * -8, span * 8) * param;
+		auto param_y = ofMap(ofNoise(noise_seed.y, ofGetFrameNum() * 0.01), 0, 1, span * -8, span * 8) * param;
 
-		auto loc_4 = glm::vec2((this->font_location_list[i].x + span), this->font_location_list[i].y - span);
-		auto noise_4 = ofNoise(loc_4.x * noise_span, loc_4.y * noise_span, ofGetFrameNum() * 0.005);
-		auto find_loc_4 = std::find(this->font_location_list.begin(), this->font_location_list.end(), loc_4) == this->font_location_list.end();
+		auto next_param_x = ofMap(ofNoise(noise_seed.x, (ofGetFrameNum() + 1) * 0.01), 0, 1, span * -8, span * 8) * next_param;
+		auto next_param_y = ofMap(ofNoise(noise_seed.y, (ofGetFrameNum() + 1) * 0.01), 0, 1, span * -8, span * 8) * next_param;
 
-		if (noise_value <= 0.5) {
+		color.setHsb(0, 255, ofMap(p, 0, 25, 255, 100));
 
-			ofDrawLine(-len, -len, len, len);
+		ofSetColor(0);
+		ofFill();
+		ofDrawCircle(x + param_x, y + param_y, span * 0.35);
 
-			if (noise_1 > 0.5 || find_loc_1) { ofDrawCircle(-len, -len, 3); }
-			if (noise_2 > 0.5 || find_loc_2) { ofDrawCircle(len, len, 3); }
-
-		}
-		else {
-
-			ofDrawLine(-len, len, len, -len);
-
-			if (noise_3 <= 0.5 || find_loc_3) { ofDrawCircle(-len, len, 3); }
-			if (noise_4 <= 0.5 || find_loc_4) { ofDrawCircle(len, -len, 3); }
-		}
-
-
-		ofPopMatrix();
+		ofSetColor(color);
+		ofNoFill();
+		ofDrawCircle(x + param_x, y + param_y, span * 0.35);
 	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 25;
+	int start = 50;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;

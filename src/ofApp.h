@@ -21,5 +21,5 @@ public:
 	void gotMessage(ofMessage msg) {};
 
 	ofTrueTypeFont font;
-	vector<glm::vec2> font_location_list;
+	vector<glm::vec2> location_list;
 };
