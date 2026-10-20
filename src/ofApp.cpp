@@ -4,50 +4,19 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openFrameworks");
+	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
+	ofBackground(239);
 
-	this->font.loadFont("fonts/Kazesawa-Bold.ttf", 525, true, true, true);
+	for (int i = 0; i < 9; i++) {
 
+		this->param_list.push_back(glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000)));
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
-
-	if (ofGetFrameNum() % 25 == 0) {
-
-		this->location_list.clear();
-
-		ofFbo fbo;
-		fbo.allocate(ofGetWidth(), ofGetHeight());
-		fbo.begin();
-		ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
-		ofClear(0);
-		ofSetColor(0);
-
-		string word = ofGetFrameNum() % 50 == 0 ? "2" : "5";
-		font.drawString(word, font.stringWidth(word) * -0.5, font.stringHeight(word) - 300);
-
-		fbo.end();
-
-		auto span = 20;
-		ofPixels pixels;
-		fbo.readToPixels(pixels);
-		for (int x = 60; x < 700; x += span) {
-
-			for (int y = 0; y < 720; y += span) {
-
-				ofColor color = pixels.getColor(x, y);
-				if (color != ofColor(0, 0)) {
-
-					this->location_list.push_back(glm::vec3(x - ofGetWidth() * 0.5, y - ofGetHeight() * 0.45, 0));
-				}
-			}
-		}
-	}
 }
 
 //--------------------------------------------------------------
@@ -55,41 +24,85 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	int span = 20;
-	ofColor color;
-	for (auto& location : this->location_list) {
+	auto len = 45;
+	auto head_size = 6;
+	ofSetColor(39);
 
-		auto x = location.x;
-		auto y = location.y;
+	for (int k = 0; k < this->param_list.size(); k++) {
 
-		auto p = ofGetFrameNum() % 25;
-		auto next_p = (ofGetFrameNum() + 1) % 25;
+		ofPushMatrix();
+		ofTranslate((k % 3) * 240 - 240, (k / 3) * 240 - 240);
 
-		auto param = p < 5 ? 0 : p < 15 ? ofMap(p, 5, 15, 0, 1) : p < 20 ? 1 : ofMap(p, 20, 25, 1, 0);
-		auto next_param = next_p < 5 ? 0 : next_p < 15 ? ofMap(next_p, 5, 15, 0, 1) : next_p < 20 ? 1 : ofMap(next_p, 20, 25, 1, 0);
+		ofMesh mesh;
+		vector<glm::vec3> right, left, frame;
 
-		auto noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
+		glm::vec3 last_location;
+		float last_theta, last_radius;
 
-		auto param_x = ofMap(ofNoise(noise_seed.x, ofGetFrameNum() * 0.01), 0, 1, span * -8, span * 8) * param;
-		auto param_y = ofMap(ofNoise(noise_seed.y, ofGetFrameNum() * 0.01), 0, 1, span * -8, span * 8) * param;
+		for (int i = 0; i < len; i++) {
 
-		auto next_param_x = ofMap(ofNoise(noise_seed.x, (ofGetFrameNum() + 1) * 0.01), 0, 1, span * -8, span * 8) * next_param;
-		auto next_param_y = ofMap(ofNoise(noise_seed.y, (ofGetFrameNum() + 1) * 0.01), 0, 1, span * -8, span * 8) * next_param;
+			auto noise_deg = ofMap(ofNoise(this->param_list[k].x, (ofGetFrameNum() + i) * 0.0025), 0, 1, -360, 360);
+			auto noise_radius = ofMap(ofNoise(this->param_list[k].y, (ofGetFrameNum() + i) * 0.015), 0, 1, -110, 110);
+			auto next_noise_deg = ofMap(ofNoise(this->param_list[k].x, (ofGetFrameNum() + i + 1) * 0.0025), 0, 1, -360, 360);
+			auto next_noise_radius = ofMap(ofNoise(this->param_list[k].y, (ofGetFrameNum() + i + 1) * 0.015), 0, 1, -110, 110);
 
-		color.setHsb(0, 255, ofMap(p, 0, 25, 255, 100));
+			auto location = glm::vec3(noise_radius * cos(noise_deg * DEG_TO_RAD), noise_radius * sin(noise_deg * DEG_TO_RAD), 0);
+			auto next = glm::vec3(next_noise_radius * cos(next_noise_deg * DEG_TO_RAD), next_noise_radius * sin(next_noise_deg * DEG_TO_RAD), 0);
 
-		ofSetColor(0);
-		ofFill();
-		ofDrawCircle(x + param_x, y + param_y, span * 0.35);
+			auto direction = next - location;
+			auto theta = atan2(direction.y, direction.x);
 
-		ofSetColor(color);
-		ofNoFill();
-		ofDrawCircle(x + param_x, y + param_y, span * 0.35);
+			right.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta + PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta + PI * 0.5), 0));
+			left.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta - PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta - PI * 0.5), 0));
+
+			last_location = location;
+			last_theta = theta;
+			last_radius = noise_radius;
+		}
+
+		for (int i = 0; i < right.size(); i++) {
+
+			mesh.addVertex(left[i]);
+			mesh.addVertex(right[i]);
+		}
+
+		for (int i = 0; i < mesh.getNumVertices() - 2; i += 2) {
+
+			mesh.addIndex(i + 0); mesh.addIndex(i + 1); mesh.addIndex(i + 3);
+			mesh.addIndex(i + 0); mesh.addIndex(i + 2); mesh.addIndex(i + 3);
+		}
+
+		auto tmp_head_size = ofMap(mesh.getNumVertices() - 2, 0, mesh.getNumVertices(), 0, head_size);
+
+		mesh.addVertex(last_location);
+		int index = mesh.getNumVertices();
+		for (auto theta = last_theta - PI * 0.5; theta <= last_theta + PI * 0.5; theta += PI / 20) {
+
+			mesh.addVertex(last_location + glm::vec3(tmp_head_size * cos(theta), tmp_head_size * sin(theta), 0));
+			frame.push_back(last_location + glm::vec3(tmp_head_size * cos(theta), tmp_head_size * sin(theta), 0));
+		}
+
+		for (int i = index; i < mesh.getNumVertices() - 1; i++) {
+
+			mesh.addIndex(index); mesh.addIndex(i + 0); mesh.addIndex(i + 1);
+		}
+
+		if (abs(last_radius) < 2) { this->param_list[k].z += 0.1; }
+
+		int span = 2;
+		int deg_span = 360 / span;
+		for (int deg = 0; deg < 360; deg += deg_span) {
+
+			ofRotate(deg_span);
+			mesh.draw();
+		}
+
+		ofPopMatrix();
 	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 50;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -104,6 +117,7 @@ void ofApp::draw() {
 	}
 	*/
 }
+
 
 //--------------------------------------------------------------
 int main() {
