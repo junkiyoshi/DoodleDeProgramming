@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
@@ -19,11 +19,11 @@ void ofApp::update() {
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 2;
-	float theta_deg_step = 2;
+	float phi_deg_step = 0.1;
+	float theta_deg_step = 0.1;
 	float noise_threshold_1 = 0.45;
 	float noise_threshold_2 = 0.55;
-	float noise_span = 4;
+	float noise_span = 8;
 	float radius = 280;
 
 	ofColor face_color(0);
@@ -31,7 +31,7 @@ void ofApp::update() {
 
 	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
-		for (float theta_deg = 61; theta_deg <= 121; theta_deg += theta_deg_step) {
+		for (float theta_deg = 75; theta_deg <= 107; theta_deg += theta_deg_step) {
 
 			auto noise_value = ofNoise(
 				cos(phi_deg * DEG_TO_RAD) * noise_span,
@@ -93,7 +93,7 @@ void ofApp::update() {
 			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
 			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
 
-			if (noise_value_1 < noise_threshold_1 || noise_value_1 > noise_threshold_2) {
+			if (noise_value_1 < noise_threshold_1 || noise_value_1 > noise_threshold_2 || theta_deg == 75) {
 
 				this->line.addVertex(vertices[0]); this->line.addVertex(vertices[1]);
 				this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
@@ -114,7 +114,7 @@ void ofApp::update() {
 				this->line.addColor(line_color); this->line.addColor(line_color);
 			}
 
-			if (noise_value_4 < noise_threshold_1 || noise_value_4 > noise_threshold_2) {
+			if (noise_value_4 < noise_threshold_1 || noise_value_4 > noise_threshold_2 || theta_deg > 106.9) {
 
 				this->line.addVertex(vertices[2]); this->line.addVertex(vertices[3]);
 				this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
@@ -133,7 +133,6 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	this->cam.setPosition(glm::vec3(0, 0, 250));
 	ofRotateX(270);
 	ofRotateZ(ofGetFrameNum() * 0.16);
 
@@ -144,7 +143,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 2;
+	int start = 50;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
