@@ -1,4 +1,4 @@
-#include "ofApp.h"	
+#include "ofApp.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,44 +6,134 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
+	ofBackground(239);
 	ofEnableDepthTest();
+
+	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	this->face.clear();
+	this->line.clear();
+
+	float phi_deg_step = 5;
+	float theta_deg_step = 5;
+	float noise_threshold = 0.53;
+	float noise_span = 0.5;
+	float radius_span = 0.01;
+
+	ofColor line_color = ofColor(255);
+
+	for (float radius = 230; radius > 180; radius -= 5) {
+
+		ofColor face_color = ofColor(ofMap(radius, 230, 180, 0, 139));
+
+		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
+
+			for (float theta_deg = 30; theta_deg <= 150; theta_deg += theta_deg_step) {
+
+				auto noise_value = ofNoise(
+					cos(phi_deg * DEG_TO_RAD) * noise_span,
+					sin(phi_deg * DEG_TO_RAD) * noise_span,
+					cos(theta_deg * DEG_TO_RAD) * noise_span,
+					radius * radius_span + ofGetFrameNum() * 0.04);
+
+				if (noise_value < noise_threshold) { continue; }
+
+				auto noise_value_1 = ofNoise(
+					cos(phi_deg * DEG_TO_RAD) * noise_span,
+					sin(phi_deg * DEG_TO_RAD) * noise_span,
+					cos((theta_deg - theta_deg_step) * DEG_TO_RAD) * noise_span,
+					radius * radius_span + ofGetFrameNum() * 0.04);
+				auto noise_value_2 = ofNoise(
+					cos((phi_deg + phi_deg_step) * DEG_TO_RAD) * noise_span,
+					sin((phi_deg + phi_deg_step) * DEG_TO_RAD) * noise_span,
+					cos(theta_deg * DEG_TO_RAD) * noise_span,
+					radius * radius_span + ofGetFrameNum() * 0.04);
+				auto noise_value_3 = ofNoise(
+					cos((phi_deg - phi_deg_step) * DEG_TO_RAD) * noise_span,
+					sin((phi_deg - phi_deg_step) * DEG_TO_RAD) * noise_span,
+					cos(theta_deg * DEG_TO_RAD) * noise_span,
+					radius * radius_span + ofGetFrameNum() * 0.04);
+				auto noise_value_4 = ofNoise(
+					cos(phi_deg * DEG_TO_RAD) * noise_span,
+					sin(phi_deg * DEG_TO_RAD) * noise_span,
+					cos((theta_deg + theta_deg_step) * DEG_TO_RAD) * noise_span,
+					radius * radius_span + ofGetFrameNum() * 0.04);
+
+				auto index = this->face.getNumVertices();
+				vector<glm::vec3> vertices;
+
+				vertices.push_back(glm::vec3(
+					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
+				vertices.push_back(glm::vec3(
+					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
+				vertices.push_back(glm::vec3(
+					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
+				vertices.push_back(glm::vec3(
+					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+					radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
+
+				this->face.addVertices(vertices);
+
+				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
+				this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
+
+				if (noise_value_1 < noise_threshold) {
+
+					this->line.addVertex(vertices[0]); this->line.addVertex(vertices[1]);
+					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
+					this->line.addColor(line_color); this->line.addColor(line_color);
+				}
+
+				if (noise_value_2 < noise_threshold) {
+
+					this->line.addVertex(vertices[0]); this->line.addVertex(vertices[2]);
+					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
+					this->line.addColor(line_color); this->line.addColor(line_color);
+				}
+
+				if (noise_value_3 < noise_threshold) {
+
+					this->line.addVertex(vertices[1]); this->line.addVertex(vertices[3]);
+					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
+					this->line.addColor(line_color); this->line.addColor(line_color);
+				}
+
+				if (noise_value_4 < noise_threshold) {
+
+					this->line.addVertex(vertices[2]); this->line.addVertex(vertices[3]);
+					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
+					this->line.addColor(line_color); this->line.addColor(line_color);
+				}
+
+				for (int i = 0; i < vertices.size(); i++) {
+
+					this->face.addColor(face_color);
+				}
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateY(90);
-	ofRotateZ(ofGetFrameNum() * 0.36);
+	ofRotateX(270);
+	ofRotateZ(ofGetFrameNum() * 0.72);
 
-	int radius = 150;
-	int size = (radius * 2 * PI) / 360 * 3;
-	for (int deg = 0; deg < 360; deg += 6) {
-
-		auto location = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), 0);
-		auto height = 150;
-		auto power = ofMap(ofNoise(location.x * 0.02, location.y * 0.02, ofGetFrameNum() * 0.01), 0, 1, 0, 25);
-
-		ofPushMatrix();
-		ofTranslate(location);
-		ofRotateZ(deg);
-
-		ofFill();
-		ofSetColor(0);
-		ofDrawBox(height - 1, size - 1, size * power - 1);
-
-		ofNoFill();
-		ofSetColor(255);
-		ofDrawBox(height, size, size * power);
-
-		ofPopMatrix();
-	}
+	this->face.draw();
+	this->line.draw();
 
 	this->cam.end();
 
