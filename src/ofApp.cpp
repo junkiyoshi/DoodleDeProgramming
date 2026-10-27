@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -18,21 +18,19 @@ void ofApp::update() {
 	this->face.clear();
 	this->line.clear();
 
-	float phi_deg_step = 5;
-	float theta_deg_step = 5;
+	float phi_deg_step = 0.5;
+	float theta_deg_step = 0.5;
 	float noise_threshold = 0.53;
 	float noise_span = 0.5;
-	float radius_span = 0.01;
+	float radius_span = 0.015;
 
-	ofColor line_color = ofColor(255);
+	ofColor face_color(255, 0, 0), line_color(0);
 
-	for (float radius = 230; radius > 180; radius -= 5) {
-
-		ofColor face_color = ofColor(ofMap(radius, 230, 180, 0, 139));
+	for (float radius = 230; radius > 30; radius -= 5) {
 
 		for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
-			for (float theta_deg = 30; theta_deg <= 150; theta_deg += theta_deg_step) {
+			for (float theta_deg = 40; theta_deg <= 140; theta_deg += theta_deg_step) {
 
 				auto noise_value = ofNoise(
 					cos(phi_deg * DEG_TO_RAD) * noise_span,
@@ -88,7 +86,7 @@ void ofApp::update() {
 				this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
 				this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
 
-				if (noise_value_1 < noise_threshold) {
+				if (noise_value_1 < noise_threshold || theta_deg == 40) {
 
 					this->line.addVertex(vertices[0]); this->line.addVertex(vertices[1]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
@@ -109,7 +107,7 @@ void ofApp::update() {
 					this->line.addColor(line_color); this->line.addColor(line_color);
 				}
 
-				if (noise_value_4 < noise_threshold) {
+				if (noise_value_4 < noise_threshold || theta_deg == 140) {
 
 					this->line.addVertex(vertices[2]); this->line.addVertex(vertices[3]);
 					this->line.addIndex(this->line.getNumVertices() - 1); this->line.addIndex(this->line.getNumVertices() - 2);
@@ -129,7 +127,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(270);
+	ofRotateX(310);
 	ofRotateZ(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
@@ -139,7 +137,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 10;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
