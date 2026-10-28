@@ -19,5 +19,5 @@ public:
 	void gotMessage(ofMessage msg) {};
 
 	ofEasyCam cam;
-	ofMesh face, line;
+	ofMesh face, frame;
 };
