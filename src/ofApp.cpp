@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 }
 
@@ -21,14 +21,14 @@ void ofApp::draw() {
 	this->cam.begin();
 
 	int R = 235;
-	int v_span = 3;
-	int u_span = 10;
+	int v_span = 6;
+	int u_span = 20;
 
 	ofMesh face, line;
 	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	ofColor face_color = ofColor(39);
-	ofColor line_color = ofColor(39, 239, 39);
+	ofColor face_color = ofColor(0);
+	ofColor line_color = ofColor(39, 39, 239);
 
 	for (int v = 0; v < 360; v += v_span) {
 
@@ -36,7 +36,7 @@ void ofApp::draw() {
 
 			for (int r = 30; r <= 60; r += 5) {
 
-				auto noise_value = ofNoise(glm::vec4(this->make_point(R, r, u, v) * 0.005, ofGetFrameNum() * 0.025));
+				auto noise_value = ofNoise(glm::vec4(this->make_point(R, 5, u, v) * 0.02, r * 0.05 - ofGetFrameNum() * 0.025));
 				auto param = noise_value > 0.5 ? noise_value < 0.6 ? ofMap(noise_value, 0.5, 0.6, 1, 0) : 0 : 1;
 				auto v_size = v_span * param;
 				auto u_size = u_span * param;
@@ -64,10 +64,10 @@ void ofApp::draw() {
 				line.addColor(line_color);
 				line.addColor(line_color);
 
-				auto noise_value_1 = ofNoise(glm::vec4(this->make_point(R, r, u - u_span, v) * 0.005, ofGetFrameNum() * 0.025));
-				auto noise_value_2 = ofNoise(glm::vec4(this->make_point(R, r, u, v + v_span) * 0.005, ofGetFrameNum() * 0.025));
-				auto noise_value_3 = ofNoise(glm::vec4(this->make_point(R, r, u, v - v_span) * 0.005, ofGetFrameNum() * 0.025));
-				auto noise_value_4 = ofNoise(glm::vec4(this->make_point(R, r, u + u_span, v) * 0.005, ofGetFrameNum() * 0.025));
+				auto noise_value_1 = ofNoise(glm::vec4(this->make_point(R, 5, u - u_span, v) * 0.02, r * 0.05 - ofGetFrameNum() * 0.025));
+				auto noise_value_2 = ofNoise(glm::vec4(this->make_point(R, 5, u, v + v_span) * 0.02, r * 0.05 - ofGetFrameNum() * 0.025));
+				auto noise_value_3 = ofNoise(glm::vec4(this->make_point(R, 5, u, v - v_span) * 0.02, r * 0.05 - ofGetFrameNum() * 0.025));
+				auto noise_value_4 = ofNoise(glm::vec4(this->make_point(R, 5, u + u_span, v) * 0.02, r * 0.05 - ofGetFrameNum() * 0.025));
 
 				auto param_1 = noise_value_1 > 0.5 ? noise_value_1 < 0.6 ? ofMap(noise_value_1, 0.5, 0.6, 1, 0) : 0 : 1;
 				auto param_2 = noise_value_2 > 0.5 ? noise_value_2 < 0.6 ? ofMap(noise_value_2, 0.5, 0.6, 1, 0) : 0 : 1;
@@ -106,7 +106,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 150;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
