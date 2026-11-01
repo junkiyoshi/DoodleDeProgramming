@@ -21,4 +21,5 @@ public:
 	glm::vec3 make_point(float R, float r, float u, float v);
 
 	ofEasyCam cam;
+	ofMesh face, line;
 };
