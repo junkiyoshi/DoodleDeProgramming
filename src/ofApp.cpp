@@ -4,130 +4,136 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openFrameworks");
+	ofSetWindowTitle("openframeworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
-
-	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+	ofBackground(239);
+	ofNoFill();
+	ofSetLineWidth(3);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
-
-	this->face.clear();
-	this->line.clear();
-
-	float phi_deg_step = 0.25;
-	float theta_deg_step = 0.25;
-	float threshold = 0.55;
-	float noise_span = 0.0075;
-	float noise_len = 0.02;
-
-	float R = 220;
-	float base_r = R * 0.35;
-
-	float r = base_r;
-
-	ofColor face_color = ofColor(0);
-	ofColor line_color = ofColor(255);
-
-	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
-
-		for (float theta_deg = 0; theta_deg < 360; theta_deg += theta_deg_step) {
-
-			auto noise_value = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg) * noise_span, ofGetFrameNum() * 0.015));
-			if (noise_value >= threshold + noise_len || noise_value <= threshold - noise_len) { continue; }
-
-			auto noise_1 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg - theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.015));
-			auto noise_2 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg + phi_deg_step) * noise_span, ofGetFrameNum() * 0.015));
-			auto noise_3 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg, phi_deg - phi_deg_step) * noise_span, ofGetFrameNum() * 0.015));
-			auto noise_4 = ofNoise(glm::vec4(this->make_point(R, base_r, theta_deg + theta_deg_step, phi_deg) * noise_span, ofGetFrameNum() * 0.015));
-
-			auto index = this->face.getNumVertices();
-			vector<glm::vec3> vertices;
-
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg - phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg - theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
-			vertices.push_back(glm::vec3(this->make_point(R, r, theta_deg + theta_deg_step * 0.5, phi_deg + phi_deg_step * 0.5)));
-
-			this->face.addVertices(vertices);
-
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-			this->face.addColor(face_color);
-
-			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
-			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
-
-			if (noise_1 >= threshold + noise_len || noise_1 <= threshold - noise_len) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[2]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_2 >= threshold + noise_len || noise_2 <= threshold - noise_len) {
-
-				this->line.addVertex(vertices[2]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_3 >= threshold + noise_len || noise_3 <= threshold - noise_len) {
-
-				this->line.addVertex(vertices[0]);
-				this->line.addVertex(vertices[1]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-
-			if (noise_4 >= threshold + noise_len || noise_4 <= threshold - noise_len) {
-
-				this->line.addVertex(vertices[1]);
-				this->line.addVertex(vertices[3]);
-
-				this->line.addColor(line_color);
-				this->line.addColor(line_color);
-
-				this->line.addIndex(this->line.getNumVertices() - 1);
-				this->line.addIndex(this->line.getNumVertices() - 2);
-			}
-		}
-	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
+	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
 
-	this->face.draw();
-	this->line.draw();
+	ofSeedRandom(39);
+	auto noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
 
-	this->cam.end();
+	int count = 24;
+	int len = 120;
+	float head_size = 3;
+
+	ofSetColor(255);
+	for (int k = 0; k < count; k++) {
+
+		vector<glm::vec3> right, left, frame;
+
+		glm::vec3 last_location;
+		float last_theta;
+
+		float random = 100;
+		float deg = ofMap(k, 0, count, 0, 360);
+		float span = ofRandom(0.01, 0.08);
+		for (int i = 0; i < len; i++) {
+
+			auto radius = ofMap(sin((random + ofGetFrameNum() + i) * span), 0, 1, 280, 320);
+			auto next_radius = ofMap(sin((random + ofGetFrameNum() + i + 1) * span), 0, 1, 280, 320);
+
+			auto location = glm::vec3(radius * cos((ofGetFrameNum() + i + deg) * DEG_TO_RAD), radius * sin((ofGetFrameNum() + i + deg) * DEG_TO_RAD), 0);
+			auto next = glm::vec3(next_radius * cos((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), next_radius * sin((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), 0);
+
+			auto direction = next - location;
+			auto theta = atan2(direction.y, direction.x);
+
+			right.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta + PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta + PI * 0.5), 0));
+			left.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta - PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta - PI * 0.5), 0));
+
+			last_location = location;
+			last_theta = theta;
+		}
+
+		for (auto theta = last_theta - PI * 0.5; theta <= last_theta + PI * 0.5; theta += PI / 20) {
+
+			frame.push_back(last_location + glm::vec3(head_size * cos(theta), head_size * sin(theta), 0));
+		}
+
+		ofBeginShape();
+		ofVertices(frame);
+		std::reverse(right.begin(), right.end());
+		ofVertices(right);
+		ofVertices(left);
+		ofEndShape(true);
+	}
+
+	ofSeedRandom(39);
+	noise_seed = glm::vec2(ofRandom(1000), ofRandom(1000));
+
+	ofSetColor(0);
+	for (int k = 0; k < count; k++) {
+
+		ofMesh mesh;
+		vector<glm::vec3> right, left;
+
+		glm::vec3 last_location;
+		float last_theta;
+
+		float random = 100;
+		float deg = ofMap(k, 0, count, 0, 360);
+		float span = ofRandom(0.01, 0.08);
+		for (int i = 0; i < len; i++) {
+
+			auto radius = ofMap(sin((random + ofGetFrameNum() + i) * span), 0, 1, 280, 320);
+			auto next_radius = ofMap(sin((random + ofGetFrameNum() + i + 1) * span), 0, 1, 280, 320);
+
+			auto location = glm::vec3(radius * cos((ofGetFrameNum() + i + deg) * DEG_TO_RAD), radius * sin((ofGetFrameNum() + i + deg) * DEG_TO_RAD), 0);
+			auto next = glm::vec3(next_radius * cos((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), next_radius * sin((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), 0);
+
+			auto direction = next - location;
+			auto theta = atan2(direction.y, direction.x);
+
+			right.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta + PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta + PI * 0.5), 0));
+			left.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta - PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta - PI * 0.5), 0));
+
+			last_location = location;
+			last_theta = theta;
+		}
+
+		for (int i = 0; i < right.size(); i++) {
+
+			mesh.addVertex(left[i]);
+			mesh.addVertex(right[i]);
+		}
+
+
+		for (int i = 0; i < mesh.getNumVertices() - 2; i += 2) {
+
+			mesh.addIndex(i + 0); mesh.addIndex(i + 1); mesh.addIndex(i + 3);
+			mesh.addIndex(i + 0); mesh.addIndex(i + 2); mesh.addIndex(i + 3);
+		}
+
+		mesh.addVertex(last_location);
+		int index = mesh.getNumVertices();
+		for (auto theta = last_theta - PI * 0.5; theta <= last_theta + PI * 0.5; theta += PI / 20) {
+
+			mesh.addVertex(last_location + glm::vec3(head_size * cos(theta), head_size * sin(theta), 0));
+		}
+
+		for (int i = index; i < mesh.getNumVertices() - 1; i++) {
+
+			mesh.addIndex(index); mesh.addIndex(i + 0); mesh.addIndex(i + 1);
+		}
+
+		mesh.draw();
+	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 2;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -142,22 +148,6 @@ void ofApp::draw() {
 	}
 	*/
 }
-
-//--------------------------------------------------------------
-glm::vec3 ofApp::make_point(float R, float r, float u, float v) {
-
-	// 数学デッサン教室 描いて楽しむ数学たち　P.31
-
-	u *= DEG_TO_RAD;
-	v *= DEG_TO_RAD;
-
-	auto x = (R + r * cos(u)) * cos(v);
-	auto y = (R + r * cos(u)) * sin(v);
-	auto z = r * sin(u);
-
-	return glm::vec3(x, y, z);
-}
-
 
 //--------------------------------------------------------------
 int main() {
