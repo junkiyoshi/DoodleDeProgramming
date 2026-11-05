@@ -6,8 +6,9 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(1.5);
+	ofBackground(39);
+	ofNoFill();
+	ofSetLineWidth(1);
 
 	ofEnableDepthTest();
 
@@ -72,11 +73,40 @@ void ofApp::draw() {
 
 	this->cam.begin();
 
-	ofSetColor(239);
+	ofSetColor(0);
 	this->face.draw();
 
-	ofSetColor(0);
+	ofSetColor(128);
 	this->line.drawWireframe();
+
+	ofColor color;
+	for (int i = 0; i < 300; i++) {
+		
+		auto start = ofRandom(500);
+		auto seed = ofRandom(3, 8);
+		float deg = ofRandom(360);
+		auto z_param = ofRandom(0, 10);
+
+		color.setHsb(ofMap(i, 0, 300, 0, 255), 0, 255);
+		ofSetColor(color);
+
+		vector<glm::vec3> vertices;
+		for (int k = 0; k < 15; k++) {
+
+			int radius = (int)(start + (ofGetFrameNum() + k) * seed) % 500;
+			auto z = radius > 200 ? 0 : ofMap(radius, 0, 200, - 1 * pow(200 - radius, 1.1), 0);
+			z += z_param;
+
+			auto vertex = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z + 1);
+			vertices.push_back(vertex);
+		}
+
+		for (int m = 1; m < vertices.size(); m++) {
+
+			ofSetColor(255, ofMap(m, 0, vertices.size(), 0, 255));
+			ofDrawLine(vertices[m - 1], vertices[m]);
+		}
+	}
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
