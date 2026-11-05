@@ -4,91 +4,79 @@
 void ofApp::setup() {
 
 	ofSetFrameRate(25);
-	ofSetWindowTitle("openframeworks");
+	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
-};
+	ofBackground(239);
+	ofSetLineWidth(1.5);
 
+	ofEnableDepthTest();
+
+	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+}
 //--------------------------------------------------------------
 void ofApp::update() {
 
+	ofSeedRandom(39);
+
+	this->face.clear();
+	this->line.clear();
+
+	int radius_start = 10 - ofGetFrameNum() % 10;
+	for (int radius = radius_start; radius <= 500; radius += 10) {
+
+		int start_index = this->line.getNumVertices();
+		int index = start_index;
+		for (int deg = 0; deg < 360; deg += 1) {
+
+			auto z = radius > 200 ? 0 : ofMap(radius, 0, 200, -1 * pow(200 - radius, 1.1), 0);
+
+			auto vertex = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z + 1);
+			this->line.addVertex(vertex);
+
+			if (deg > 0) {
+
+				this->line.addIndex(index - 1);
+				this->line.addIndex(index);
+			}
+
+			index++;
+
+			int next_radius = radius + 10;
+			int next_z = next_radius > 200 ? 0 : ofMap(next_radius, 0, 200, -1 * pow(200 - next_radius, 1.1), 0);
+			vector<glm::vec3> vertices;
+			vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z));
+			vertices.push_back(glm::vec3(radius * cos((deg + 1) * DEG_TO_RAD), radius * sin((deg + 1) * DEG_TO_RAD), z));
+			vertices.push_back(glm::vec3(next_radius * cos((deg + 1) * DEG_TO_RAD), next_radius * sin((deg + 1) * DEG_TO_RAD), next_z));
+			vertices.push_back(glm::vec3(next_radius * cos(deg * DEG_TO_RAD), next_radius * sin(deg * DEG_TO_RAD), next_z));
+
+			face.addVertices(vertices);
+
+			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
+			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 3); face.addIndex(face.getNumVertices() - 4);
+		}
+
+		this->line.addIndex(this->line.getNumVertices() - 1);
+		this->line.addIndex(start_index);
+	}
+
+	int index_span = 15;
+	for (int index = 0; index < this->line.getNumVertices() - 360; index += index_span) {
+
+		this->line.addIndex(index);
+		this->line.addIndex(index + 360);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
+	this->cam.begin();
 
-	ofSeedRandom(39);
+	ofSetColor(239);
+	this->face.draw();
 
-	int count = 64;
-	int len = 120;
-	float head_size = 5;
-	ofColor color;
-
-	for (int k = 0; k < count; k++) {
-
-		float deg = ofMap(k, 0, count, 0, 360);
-		float span = ofRandom(0.01, 0.08);
-
-		for (float head_size = 3; head_size > 0; head_size -= 1) {
-
-			ofMesh mesh;
-			vector<glm::vec3> right, left;
-
-			glm::vec3 last_location;
-			float last_theta;
-
-			color.setHsb((int)(ofMap(head_size, 0, 5, 0, 255) + k * 4) % 255, head_size == 1 ? 0 : 255, 255);
-			ofSetColor(color);
-
-			for (int i = 0; i < len; i++) {
-
-				auto radius = ofMap(sin((ofGetFrameNum() + i) * span), 0, 1, 280, 320);
-				auto next_radius = ofMap(sin((ofGetFrameNum() + i + 1) * span), 0, 1, 280, 320);
-
-				auto location = glm::vec3(radius * cos((ofGetFrameNum() + i + deg) * DEG_TO_RAD), radius * sin((ofGetFrameNum() + i + deg) * DEG_TO_RAD), 0);
-				auto next = glm::vec3(next_radius * cos((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), next_radius * sin((ofGetFrameNum() + i + 1 + deg) * DEG_TO_RAD), 0);
-
-				auto direction = next - location;
-				auto theta = atan2(direction.y, direction.x);
-
-				right.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta + PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta + PI * 0.5), 0));
-				left.push_back(location + glm::vec3(ofMap(i, 0, len, 0, head_size) * cos(theta - PI * 0.5), ofMap(i, 0, len, 0, head_size) * sin(theta - PI * 0.5), 0));
-
-				last_location = location;
-				last_theta = theta;
-			}
-
-			for (int i = 0; i < right.size(); i++) {
-
-				mesh.addVertex(left[i]);
-				mesh.addVertex(right[i]);
-			}
-
-
-			for (int i = 0; i < mesh.getNumVertices() - 2; i += 2) {
-
-				mesh.addIndex(i + 0); mesh.addIndex(i + 1); mesh.addIndex(i + 3);
-				mesh.addIndex(i + 0); mesh.addIndex(i + 2); mesh.addIndex(i + 3);
-			}
-
-			mesh.addVertex(last_location);
-			int index = mesh.getNumVertices();
-			for (auto theta = last_theta - PI * 0.5; theta <= last_theta + PI * 0.5; theta += PI / 20) {
-
-				mesh.addVertex(last_location + glm::vec3(head_size * cos(theta), head_size * sin(theta), 0));
-			}
-
-			for (int i = index; i < mesh.getNumVertices() - 1; i++) {
-
-				mesh.addIndex(index); mesh.addIndex(i + 0); mesh.addIndex(i + 1);
-			}
-
-			mesh.draw();
-		}
-	}
+	ofSetColor(0);
+	this->line.drawWireframe();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -106,6 +94,9 @@ void ofApp::draw() {
 		}
 	}
 	*/
+
+	this->cam.end();
+
 }
 
 //--------------------------------------------------------------
