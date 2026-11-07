@@ -1,4 +1,75 @@
-#include "ofApp.h"
+#include "ofApp.h"	
+
+//--------------------------------------------------------------
+Actor::Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
+
+	this->select_index = ofRandom(location_list.size());
+	while (true) {
+
+		auto itr = find(destination_list.begin(), destination_list.end(), this->select_index);
+		if (itr == destination_list.end()) {
+
+			destination_list.push_back(this->select_index);
+			break;
+		}
+
+		this->select_index = (this->select_index + 1) % location_list.size();
+	}
+
+	this->next_index = this->select_index;
+
+	this->color = ofColor(39);
+}
+
+//--------------------------------------------------------------
+void Actor::update(const int& frame_span, vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list) {
+
+	if (ofGetFrameNum() % frame_span == 0) {
+
+		auto tmp_index = this->select_index;
+		this->select_index = this->next_index;
+		int retry = next_index_list[this->select_index].size();
+		this->next_index = next_index_list[this->select_index][(int)ofRandom(next_index_list[this->select_index].size())];
+		while (--retry > 0) {
+
+			auto destination_itr = find(destination_list.begin(), destination_list.end(), this->next_index);
+			if (destination_itr == destination_list.end()) {
+
+				if (tmp_index != this->next_index) {
+
+					destination_list.push_back(this->next_index);
+					break;
+				}
+			}
+
+			this->next_index = next_index_list[this->select_index][(this->next_index + 1) % next_index_list[this->select_index].size()];
+		}
+		if (retry <= 0) {
+
+			destination_list.push_back(this->select_index);
+			this->next_index = this->select_index;
+		}
+	}
+
+	auto param = ofGetFrameNum() % frame_span;
+	auto distance = location_list[this->next_index] - location_list[this->select_index];
+	this->location = location_list[this->select_index] + distance / frame_span * param;
+
+	this->log.push_front(this->location);
+	while (this->log.size() > 125) { this->log.pop_back(); }
+}
+
+//--------------------------------------------------------------
+glm::vec3 Actor::getLocation() {
+
+	return this->location;
+}
+
+//--------------------------------------------------------------
+deque<glm::vec3> Actor::getLog() {
+
+	return this->log;
+}
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,105 +77,83 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofNoFill();
-	ofSetLineWidth(1);
+	ofBackground(239);
+	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
 
-	ofEnableDepthTest();
+	auto span = 30;
+	for (int x = -330; x <= 330; x += span) {
 
-	this->line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
+		for (int y = -330; y <= 330; y += span) {
+
+			this->location_list.push_back(glm::vec3(x, y, 0));
+		}
+	}
+
+	for (auto& location : this->location_list) {
+
+		vector<int> next_index = vector<int>();
+		int index = -1;
+		for (auto& other : this->location_list) {
+
+			index++;
+			if (location == other) { continue; }
+
+			float distance = glm::distance(location, other);
+			if (distance <= span) {
+
+				next_index.push_back(index);
+			}
+		}
+
+		this->next_index_list.push_back(next_index);
+	}
+
+	for (int i = 0; i < 30; i++) {
+
+		this->actor_list.push_back(make_unique<Actor>(this->location_list, this->next_index_list, this->destination_list));
+	}
 }
+
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
+	int frame_span = 10;
+	int prev_index_size = 0;
 
-	this->face.clear();
-	this->line.clear();
+	if (ofGetFrameNum() % frame_span == 0) {
 
-	int radius_start = 10 - ofGetFrameNum() % 10;
-	for (int radius = radius_start; radius <= 500; radius += 10) {
-
-		int start_index = this->line.getNumVertices();
-		int index = start_index;
-		for (int deg = 0; deg < 360; deg += 1) {
-
-			auto z = radius > 200 ? 0 : ofMap(radius, 0, 200, -1 * pow(200 - radius, 1.1), 0);
-
-			auto vertex = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z + 1);
-			this->line.addVertex(vertex);
-
-			if (deg > 0) {
-
-				this->line.addIndex(index - 1);
-				this->line.addIndex(index);
-			}
-
-			index++;
-
-			int next_radius = radius + 10;
-			int next_z = next_radius > 200 ? 0 : ofMap(next_radius, 0, 200, -1 * pow(200 - next_radius, 1.1), 0);
-			vector<glm::vec3> vertices;
-			vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z));
-			vertices.push_back(glm::vec3(radius * cos((deg + 1) * DEG_TO_RAD), radius * sin((deg + 1) * DEG_TO_RAD), z));
-			vertices.push_back(glm::vec3(next_radius * cos((deg + 1) * DEG_TO_RAD), next_radius * sin((deg + 1) * DEG_TO_RAD), next_z));
-			vertices.push_back(glm::vec3(next_radius * cos(deg * DEG_TO_RAD), next_radius * sin(deg * DEG_TO_RAD), next_z));
-
-			face.addVertices(vertices);
-
-			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
-			face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 3); face.addIndex(face.getNumVertices() - 4);
-		}
-
-		this->line.addIndex(this->line.getNumVertices() - 1);
-		this->line.addIndex(start_index);
+		prev_index_size = this->destination_list.size();
 	}
 
-	int index_span = 15;
-	for (int index = 0; index < this->line.getNumVertices() - 360; index += index_span) {
+	for (auto& actor : this->actor_list) {
 
-		this->line.addIndex(index);
-		this->line.addIndex(index + 360);
+		actor->update(frame_span, this->location_list, this->next_index_list, this->destination_list);
+	}
+
+	if (prev_index_size != 0) {
+
+		this->destination_list.erase(this->destination_list.begin(), this->destination_list.begin() + prev_index_size);
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
+	ofTranslate(ofGetWidth() * 0.5, ofGetHeight() * 0.5);
 
-	ofSetColor(0);
-	this->face.draw();
-
+	ofFill();
 	ofSetColor(128);
-	this->line.drawWireframe();
+	for (auto& location : this->location_list) {
 
-	ofColor color;
-	for (int i = 0; i < 300; i++) {
-		
-		auto start = ofRandom(500);
-		auto seed = ofRandom(3, 8);
-		float deg = ofRandom(360);
-		auto z_param = ofRandom(0, 10);
+		ofDrawCircle(location, 3);
+	}
 
-		color.setHsb(ofMap(i, 0, 300, 0, 255), 0, 255);
-		ofSetColor(color);
+	for (auto& actor : this->actor_list) {
 
-		vector<glm::vec3> vertices;
-		for (int k = 0; k < 15; k++) {
+		ofSetColor(actor->color);
+		for (auto& l : actor->getLog()) {
 
-			int radius = (int)(start + (ofGetFrameNum() + k) * seed) % 500;
-			auto z = radius > 200 ? 0 : ofMap(radius, 0, 200, - 1 * pow(200 - radius, 1.1), 0);
-			z += z_param;
-
-			auto vertex = glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), z + 1);
-			vertices.push_back(vertex);
-		}
-
-		for (int m = 1; m < vertices.size(); m++) {
-
-			ofSetColor(255, ofMap(m, 0, vertices.size(), 0, 255));
-			ofDrawLine(vertices[m - 1], vertices[m]);
+			ofDrawRectangle(l, 10, 10);
 		}
 	}
 
@@ -124,10 +173,8 @@ void ofApp::draw() {
 		}
 	}
 	*/
-
-	this->cam.end();
-
 }
+
 
 //--------------------------------------------------------------
 int main() {
