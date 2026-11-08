@@ -18,7 +18,7 @@ Actor::Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_l
 
 	this->next_index = this->select_index;
 
-	this->color = ofColor(39);
+	this->color = ofColor(255, 0, 0);
 }
 
 //--------------------------------------------------------------
@@ -56,7 +56,7 @@ void Actor::update(const int& frame_span, vector<glm::vec3>& location_list, vect
 	this->location = location_list[this->select_index] + distance / frame_span * param;
 
 	this->log.push_front(this->location);
-	while (this->log.size() > 125) { this->log.pop_back(); }
+	while (this->log.size() > 250) { this->log.pop_back(); }
 }
 
 //--------------------------------------------------------------
@@ -77,10 +77,10 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetRectMode(ofRectMode::OF_RECTMODE_CENTER);
 
-	auto span = 30;
+	auto span = 15;
 	for (int x = -330; x <= 330; x += span) {
 
 		for (int y = -330; y <= 330; y += span) {
@@ -108,7 +108,7 @@ void ofApp::setup() {
 		this->next_index_list.push_back(next_index);
 	}
 
-	for (int i = 0; i < 30; i++) {
+	for (int i = 0; i < 64; i++) {
 
 		this->actor_list.push_back(make_unique<Actor>(this->location_list, this->next_index_list, this->destination_list));
 	}
@@ -154,6 +154,16 @@ void ofApp::draw() {
 		for (auto& l : actor->getLog()) {
 
 			ofDrawRectangle(l, 10, 10);
+		}
+	}
+
+	ofSetColor(0);
+	for (auto& actor : this->actor_list) {
+
+
+		for (auto& l : actor->getLog()) {
+
+			ofDrawRectangle(l, 5, 5);
 		}
 	}
 
