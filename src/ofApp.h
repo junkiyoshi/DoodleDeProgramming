@@ -1,23 +1,6 @@
 #pragma once
 #include "ofMain.h"
 
-class Actor {
-public:
-	Actor(vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list);
-	void update(const int& frame_span, vector<glm::vec3>& location_list, vector<vector<int>>& next_index_list, vector<int>& destination_list);
-	glm::vec3 getLocation();
-	deque<glm::vec3> getLog();
-	ofColor color;
-
-private:
-
-	int select_index;
-	int next_index;
-
-	glm::vec3 location;
-	deque<glm::vec3> log;
-};
-
 class ofApp : public ofBaseApp {
 
 public:
@@ -31,13 +14,13 @@ public:
 	void mouseDragged(int x, int y, int button) {};
 	void mousePressed(int x, int y, int button) {};
 	void mouseReleased(int x, int y, int button) {};
+	void mouseEntered(int x, int y) {};
+	void mouseExited(int x, int y) {};
 	void windowResized(int w, int h) {};
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	vector<glm::vec3> location_list;
-	vector<vector<int>> next_index_list;
-	vector<int> destination_list;
+	void draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color);
 
-	vector<std::unique_ptr<Actor>> actor_list;
+	ofEasyCam cam;
 };
