@@ -1,4 +1,4 @@
-#include "ofApp.h"
+#include "ofApp.h"	
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,44 +6,65 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableDepthTest();
-	ofSetLineWidth(2);
+	ofBackground(239);
+	ofSetColor(0);
+	ofSetLineWidth(3);
+
+	this->noise_step = ofRandom(1000);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
 	ofSeedRandom(39);
+
+	if (ofGetFrameNum() % 50 < 25) {
+
+		this->noise_step += 0.01;
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	this->cam.begin();
-	ofRotateX(300);
-	ofRotateZ(ofGetFrameNum() * 0.18);
-	
-	for (float radius = 100; radius <= 300; radius += 50) {
+	ofTranslate(ofGetWindowSize() * 0.5);
 
-		for (int deg = 0; deg < 360; deg += 5) {
+	int size = 30;
+
+	ofFill();
+	for (int x = size * -20; x < size * 20; x += size) {
+
+		for (int y = size * -20; y < size * 20; y += size) {
 
 			ofPushMatrix();
-			ofRotateZ(deg);
-			ofTranslate(glm::vec2(radius * cos(0 * DEG_TO_RAD), radius * sin(0 * DEG_TO_RAD)));
+			ofTranslate(x, y);
 
-			auto noise_location = glm::vec2(radius * 2 * cos(deg * DEG_TO_RAD), radius * 2 * sin(deg * DEG_TO_RAD));
-			auto noise_radius = ofMap(ofNoise(glm::vec3(noise_location * 0.0025, ofGetFrameNum() * 0.005)), 0, 1, -120, 120);
+			int param = ofMap(ofNoise(this->noise_step, x * 0.085, y * 0.085), 0, 1, 0, 4);
 
-			ofRotateY(90);
+			switch (param) {
+			case 0:
 
-			this->draw_arrow(glm::vec2(), glm::vec2(noise_radius * cos(0 * DEG_TO_RAD), noise_radius * sin(0 * DEG_TO_RAD)), 18, ofColor(255));
+				ofDrawLine(0, size, size, 0);
+				break;
+			case 1:
+
+				ofDrawLine(0, 0, size, size);
+				break;
+			case 2:
+
+				ofDrawLine(0, 0, size, 0);
+				break;
+			case 3:
+
+				ofDrawLine(size, 0, size, size);
+				break;
+			default:
+				break;
+			}
 
 			ofPopMatrix();
 		}
 	}
-
-	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
@@ -61,38 +82,6 @@ void ofApp::draw() {
 		}
 	}
 	*/
-}
-
-//--------------------------------------------------------------
-void ofApp::draw_arrow(glm::vec2 location, glm::vec2 target, float size, ofColor color) {
-
-	auto angle = std::atan2(target.y - location.y, target.x - location.x);
-	auto distance = glm::distance(target, location);
-
-	if (glm::length(distance) > size * 0.1) {
-
-		ofPushMatrix();
-		ofTranslate(target);
-
-		ofSetColor(color);
-		ofFill();
-		ofBeginShape();
-		ofVertex(glm::vec2(size * cos(angle), size * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)));
-		ofEndShape();
-
-		ofBeginShape();
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25);
-		ofVertex(glm::vec2(size * 0.25 * cos(angle + PI * 0.5), size * 0.25 * sin(angle + PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25 - glm::vec2(distance * cos(angle), distance * sin(angle)));
-		ofVertex(glm::vec2(size * 0.25 * cos(angle - PI * 0.5), size * 0.25 * sin(angle - PI * 0.5)) * 0.25);
-		ofEndShape();
-
-		ofPopMatrix();
-	}
-
-	ofDrawSphere(glm::vec3(location, 0), 3);
 }
 
 //--------------------------------------------------------------
