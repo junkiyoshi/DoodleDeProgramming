@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetColor(0);
+	ofBackground(39);
 	ofSetLineWidth(3);
 
 	this->noise_step = ofRandom(1000);
@@ -18,9 +17,9 @@ void ofApp::update() {
 
 	ofSeedRandom(39);
 
-	if (ofGetFrameNum() % 50 < 25) {
+	if (ofGetFrameNum() % 50 < 5) {
 
-		this->noise_step += 0.01;
+		this->noise_step += 0.5;
 	}
 }
 
@@ -32,14 +31,19 @@ void ofApp::draw() {
 	int size = 30;
 
 	ofFill();
-	for (int x = size * -20; x < size * 20; x += size) {
+	for (int x = size * -12; x < size * 12; x += size) {
 
-		for (int y = size * -20; y < size * 20; y += size) {
+		ofColor color;
+		color.setHsb(ofMap(x, size * -12, size * 12, 0, 255), 130, 255);
+		ofSetColor(color);
+
+		for (int y = size * -8; y < size * 8; y += size) {
 
 			ofPushMatrix();
 			ofTranslate(x, y);
 
-			int param = ofMap(ofNoise(this->noise_step, x * 0.085, y * 0.085), 0, 1, 0, 4);
+			int param = ofMap(ofNoise(this->noise_step, x * 0.004, y * 0.004), 0, 1, 0, 4);
+			param = param % 2;
 
 			switch (param) {
 			case 0:
