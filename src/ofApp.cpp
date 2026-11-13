@@ -6,69 +6,109 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofSetLineWidth(3);
-
-	this->noise_step = ofRandom(1000);
+	ofBackground(239);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_SUBTRACT);
+	ofNoFill();
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofSeedRandom(39);
+	ofColor color;
+	for (int i = 0; i < 10; i++) {
 
-	if (ofGetFrameNum() % 50 < 5) {
+		auto deg = ofRandom(360);
+		int radius = 200;
+		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
 
-		this->noise_step += 0.5;
+		ofColor color;
+		int hue = int(ofMap(deg, 0, 360, 0, 255) + ofGetFrameNum()) % 255;
+		color.setHsb(hue, 255, 100);
+
+		vector<glm::vec2> log;
+		log.push_back(location);
+		this->log_list.push_back(log);
+		this->color_list.push_back(color);
+		this->life_list.push_back(ofRandom(100, 150));
+	}
+
+	for (int i = 0; i < 10; i++) {
+
+		auto deg = ofRandom(360);
+		int radius = 300;
+		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+
+		ofColor color;
+		int hue = int(ofMap(deg, 0, 360, 255, 0) + ofGetFrameNum()) % 255;
+		color.setHsb(hue, 255, 100);
+
+		vector<glm::vec2> log;
+		log.push_back(location);
+		this->log_list.push_back(log);
+		this->color_list.push_back(color);
+		this->life_list.push_back(ofRandom(100, 150));
+	}
+
+	int radius = 4;
+	for (int i = this->log_list.size() - 1; i >= 0; i--) {
+
+		this->life_list[i] -= 1;
+		if (this->life_list[i] < 0) {
+
+			this->log_list.erase(this->log_list.begin() + i);
+			this->color_list.erase(this->color_list.begin() + i);
+			this->life_list.erase(this->life_list.begin() + i);
+
+			continue;
+		}
+
+		int count = 0;
+		while (true) {
+
+			auto deg = ofMap(ofNoise(glm::vec3(this->log_list[i].back() * 0.01, count * 0.01 + ofGetFrameNum() * 0.01)), 0, 1, -360, 360);
+			auto tmp = this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+			if (glm::length(tmp) > 200 && glm::length(tmp) < 300) {
+
+				this->log_list[i].push_back(this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD)));
+				break;
+			}
+			else {
+
+				count++;
+			}
+		}
+		while (this->log_list[i].size() > 100) {
+
+			this->log_list[i].erase(this->log_list[i].begin());
+		}
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
 
-	ofTranslate(ofGetWindowSize() * 0.5);
+	this->cam.begin();
+	ofRotateZ(90);
 
-	int size = 30;
+	for (int i = 0; i < this->log_list.size(); i++) {
 
-	ofFill();
-	for (int x = size * -12; x < size * 12; x += size) {
+		if (this->life_list[i] > 80) {
 
-		ofColor color;
-		color.setHsb(ofMap(x, size * -12, size * 12, 0, 255), 130, 255);
-		ofSetColor(color);
-
-		for (int y = size * -8; y < size * 8; y += size) {
-
-			ofPushMatrix();
-			ofTranslate(x, y);
-
-			int param = ofMap(ofNoise(this->noise_step, x * 0.004, y * 0.004), 0, 1, 0, 4);
-			param = param % 2;
-
-			switch (param) {
-			case 0:
-
-				ofDrawLine(0, size, size, 0);
-				break;
-			case 1:
-
-				ofDrawLine(0, 0, size, size);
-				break;
-			case 2:
-
-				ofDrawLine(0, 0, size, 0);
-				break;
-			case 3:
-
-				ofDrawLine(size, 0, size, size);
-				break;
-			default:
-				break;
-			}
-
-			ofPopMatrix();
+			ofSetColor(this->color_list[i]);
+			ofSetLineWidth(1);
 		}
+		else {
+
+			ofSetColor(ofColor(this->color_list[i], ofMap(this->life_list[i], 0, 80, 0, 255)));
+			ofSetLineWidth(ofMap(this->life_list[i], 0, 80, 0, 1));
+		}
+
+		ofBeginShape();
+		ofVertices(this->log_list[i]);
+		ofEndShape();
 	}
+
+	this->cam.end();
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4

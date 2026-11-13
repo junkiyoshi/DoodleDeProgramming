@@ -18,5 +18,9 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	float noise_step;
+	vector<vector<glm::vec2>> log_list;
+	vector<ofColor> color_list;
+	vector<float> life_list;
+
+	ofEasyCam cam;
 };
