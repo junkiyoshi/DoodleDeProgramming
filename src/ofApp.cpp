@@ -6,8 +6,8 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_SUBTRACT);
+	ofBackground(39);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 	ofNoFill();
 }
 
@@ -15,31 +15,16 @@ void ofApp::setup() {
 void ofApp::update() {
 
 	ofColor color;
+	float small_radius = 200;
+	float big_radius = 250;
+
 	for (int i = 0; i < 10; i++) {
 
 		auto deg = ofRandom(360);
-		int radius = 200;
-		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
+		auto location = glm::vec2(small_radius * cos(deg * DEG_TO_RAD), small_radius * sin(deg * DEG_TO_RAD));
 
 		ofColor color;
 		int hue = int(ofMap(deg, 0, 360, 0, 255) + ofGetFrameNum()) % 255;
-		color.setHsb(hue, 255, 100);
-
-		vector<glm::vec2> log;
-		log.push_back(location);
-		this->log_list.push_back(log);
-		this->color_list.push_back(color);
-		this->life_list.push_back(ofRandom(100, 150));
-	}
-
-	for (int i = 0; i < 10; i++) {
-
-		auto deg = ofRandom(360);
-		int radius = 300;
-		auto location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-
-		ofColor color;
-		int hue = int(ofMap(deg, 0, 360, 255, 0) + ofGetFrameNum()) % 255;
 		color.setHsb(hue, 255, 100);
 
 		vector<glm::vec2> log;
@@ -67,7 +52,7 @@ void ofApp::update() {
 
 			auto deg = ofMap(ofNoise(glm::vec3(this->log_list[i].back() * 0.01, count * 0.01 + ofGetFrameNum() * 0.01)), 0, 1, -360, 360);
 			auto tmp = this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-			if (glm::length(tmp) > 200 && glm::length(tmp) < 300) {
+			if (glm::length(tmp) > small_radius && glm::length(tmp) < big_radius) {
 
 				this->log_list[i].push_back(this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD)));
 				break;
@@ -77,7 +62,8 @@ void ofApp::update() {
 				count++;
 			}
 		}
-		while (this->log_list[i].size() > 100) {
+
+		while (this->log_list[i].size() > 500) {
 
 			this->log_list[i].erase(this->log_list[i].begin());
 		}
@@ -109,10 +95,10 @@ void ofApp::draw() {
 	}
 
 	this->cam.end();
-
+	
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 500;
+	int start = 1500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
