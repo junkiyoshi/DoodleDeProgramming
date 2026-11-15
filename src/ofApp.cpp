@@ -1,4 +1,4 @@
-#include "ofApp.h"	
+#include "ofApp.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -6,66 +6,84 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(39);
-	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
-	ofNoFill();
+	ofBackground(239);
+	ofEnableDepthTest();
+
+	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
 
-	ofColor color;
-	float small_radius = 200;
-	float big_radius = 250;
+	ofSeedRandom(39);
 
-	for (int i = 0; i < 10; i++) {
+	this->face.clear();
+	this->frame.clear();
 
-		auto deg = ofRandom(360);
-		auto location = glm::vec2(small_radius * cos(deg * DEG_TO_RAD), small_radius * sin(deg * DEG_TO_RAD));
+	int radius = 350;
+	float phi_deg_step = 3;
+	float theta_deg_step = 3;
 
-		ofColor color;
-		int hue = int(ofMap(deg, 0, 360, 0, 255) + ofGetFrameNum()) % 255;
-		color.setHsb(hue, 255, 100);
+	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
 
-		vector<glm::vec2> log;
-		log.push_back(location);
-		this->log_list.push_back(log);
-		this->color_list.push_back(color);
-		this->life_list.push_back(ofRandom(100, 150));
-	}
+		for (float theta_deg = 10; theta_deg < 90; theta_deg += theta_deg_step) {
 
-	int radius = 4;
-	for (int i = this->log_list.size() - 1; i >= 0; i--) {
+			auto index = this->face.getNumVertices();
+			vector<glm::vec3> vertices;
 
-		this->life_list[i] -= 1;
-		if (this->life_list[i] < 0) {
+			vertices.push_back(glm::vec3(
+				radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
+			vertices.push_back(glm::vec3(
+				radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * sin((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * cos((theta_deg - theta_deg_step * 0.5) * DEG_TO_RAD)));
+			vertices.push_back(glm::vec3(
+				radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg + phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
+			vertices.push_back(glm::vec3(
+				radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * cos((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * sin((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD) * sin((phi_deg - phi_deg_step * 0.5) * DEG_TO_RAD),
+				radius * cos((theta_deg + theta_deg_step * 0.5) * DEG_TO_RAD)));
 
-			this->log_list.erase(this->log_list.begin() + i);
-			this->color_list.erase(this->color_list.begin() + i);
-			this->life_list.erase(this->life_list.begin() + i);
+			bool skip = false;
+			for (auto& vertex : vertices) {
 
-			continue;
-		}
+				if (skip == false && vertex.z > 0) {
 
-		int count = 0;
-		while (true) {
+					vertex.z = 0;
+					auto len = glm::length(vertex);
+					auto n = glm::normalize(vertex);
+					auto noise_value = ofNoise(n.x * 5, n.y * 5, len * 0.004 - ofGetFrameNum() * 0.03);
+					
+					if (noise_value > 0.5) {
 
-			auto deg = ofMap(ofNoise(glm::vec3(this->log_list[i].back() * 0.01, count * 0.01 + ofGetFrameNum() * 0.01)), 0, 1, -360, 360);
-			auto tmp = this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
-			if (glm::length(tmp) > small_radius && glm::length(tmp) < big_radius) {
-
-				this->log_list[i].push_back(this->log_list[i].back() + glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD)));
-				break;
+						vertex.z = ofMap(noise_value, 0.5, 1, 0, -250) * ofMap(len, 0, radius, 1, 0.25);
+						skip = true;
+					}
+				}
 			}
-			else {
 
-				count++;
+			if (skip) { continue; }
+
+			this->face.addVertices(vertices);
+			this->frame.addVertices(vertices);
+
+			this->face.addIndex(index + 0); this->face.addIndex(index + 1); this->face.addIndex(index + 3);
+			this->face.addIndex(index + 0); this->face.addIndex(index + 3); this->face.addIndex(index + 2);
+
+			this->frame.addIndex(index + 0); this->frame.addIndex(index + 1);
+			this->frame.addIndex(index + 0); this->frame.addIndex(index + 2);
+			this->frame.addIndex(index + 3); this->frame.addIndex(index + 1);
+			this->frame.addIndex(index + 3); this->frame.addIndex(index + 2);
+
+			for (int i = index; i < this->face.getNumVertices(); i++) {
+
+				this->face.addColor(ofColor(0));
+				this->frame.addColor(ofColor(255));
 			}
-		}
-
-		while (this->log_list[i].size() > 500) {
-
-			this->log_list[i].erase(this->log_list[i].begin());
 		}
 	}
 }
@@ -74,31 +92,19 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateZ(90);
+	ofRotateX(180);
 
-	for (int i = 0; i < this->log_list.size(); i++) {
+	this->face.draw();
 
-		if (this->life_list[i] > 80) {
+	ofTranslate(0, 0, -1.5);
 
-			ofSetColor(this->color_list[i]);
-			ofSetLineWidth(1);
-		}
-		else {
-
-			ofSetColor(ofColor(this->color_list[i], ofMap(this->life_list[i], 0, 80, 0, 255)));
-			ofSetLineWidth(ofMap(this->life_list[i], 0, 80, 0, 1));
-		}
-
-		ofBeginShape();
-		ofVertices(this->log_list[i]);
-		ofEndShape();
-	}
+	this->frame.draw();
 
 	this->cam.end();
-	
+
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 1500;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
