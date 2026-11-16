@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -21,7 +21,7 @@ void ofApp::update() {
 	this->frame.clear();
 
 	int radius = 350;
-	float phi_deg_step = 3;
+	float phi_deg_step = 1;
 	float theta_deg_step = 3;
 
 	for (float phi_deg = 0; phi_deg < 360; phi_deg += phi_deg_step) {
@@ -53,14 +53,15 @@ void ofApp::update() {
 
 				if (skip == false && vertex.z > 0) {
 
+					auto tmp_z = vertex.z;
 					vertex.z = 0;
 					auto len = glm::length(vertex);
 					auto n = glm::normalize(vertex);
 					auto noise_value = ofNoise(n.x * 5, n.y * 5, len * 0.004 - ofGetFrameNum() * 0.03);
-					
+					vertex.z = -tmp_z;
+
 					if (noise_value > 0.5) {
 
-						vertex.z = ofMap(noise_value, 0.5, 1, 0, -250) * ofMap(len, 0, radius, 1, 0.25);
 						skip = true;
 					}
 				}
@@ -93,6 +94,7 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(180);
+	ofRotateZ(ofGetFrameNum() * 0.36);
 
 	this->face.draw();
 
