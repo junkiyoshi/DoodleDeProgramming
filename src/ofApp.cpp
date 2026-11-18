@@ -6,18 +6,18 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	int span = 10;
-	for (int x = -120; x <= 120; x += span) {
+	int span = 15;
+	for (int x = -150; x <= 150; x += span) {
 
 		for (int y = -450; y <= 450; y += span) {
 
-			for (int z = -120; z <= 120; z += span) {
+			for (int z = -150; z <= 150; z += span) {
 
 				this->location_list.push_back(glm::vec3(x, y, z));
 			}
@@ -33,7 +33,7 @@ void ofApp::update() {
 	this->face.clear();
 	this->frame.clear();
 
-	float size = 10;
+	float size = 15;
 	for (int i = 0; i < this->location_list.size(); i++) {
 
 		this->setBoxToMesh(this->face, this->frame, this->location_list[i], size);
@@ -53,7 +53,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 250;
+	int start = 500;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
@@ -78,10 +78,10 @@ void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 lo
 //--------------------------------------------------------------
 void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, float height, float width, float depth) {
 
-	auto noise_value = ofNoise(glm::vec4(location * 0.005, ofGetFrameNum() * 0.025));
+	auto noise_value = ofNoise(location.x * 0.005, location.y * 0.001 + ofGetFrameNum() * 0.02, location.z * 0.005);
 
-	if (noise_value < 0.48) { return; }
-	else if (noise_value < 0.52) { noise_value = ofMap(noise_value, 0.48, 0.52, 0, 1); }
+	if (noise_value < 0.49) { return; }
+	else if (noise_value < 0.51) { noise_value = ofMap(noise_value, 0.49, 0.51, 0, 1); }
 	else { noise_value = 1; }
 
 	int face_index = face_target.getNumVertices();
@@ -137,8 +137,8 @@ void ofApp::setBoxToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 lo
 	frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 6);
 	frame_target.addIndex(frame_index + 3); frame_target.addIndex(frame_index + 7);
 
-	ofColor face_color = noise_value < 1 ? ofColor(39) : ofColor(239);
-	ofColor frame_color = noise_value < 1 ? ofColor(239) : ofColor(39);
+	ofColor face_color(0);
+	ofColor frame_color(255);
 	for (int i = 0; i < 8; i++) {
 
 		face_target.addColor(face_color);
