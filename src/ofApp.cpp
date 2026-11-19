@@ -6,13 +6,13 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 
-	auto radius = 15;
+	auto radius = 30;
 	auto x_span = radius * sqrt(3);
 	auto flg = true;
-	for (float y = -400; y < 400; y += radius * 1.5) {
+	for (float y = -720; y < 720; y += radius * 1.5) {
 
 		for (float x = -720; x < 720; x += x_span) {
 
@@ -44,36 +44,24 @@ void ofApp::update() {
 
 	for (int i = 0; i < this->location_list.size(); i++) {
 
-		auto noise_value = ofNoise(glm::vec4(this->location_list[i] * 0.0025, ofGetFrameNum() * 0.01));
-		auto z = 0;
-		auto max_z = 75;
+		auto noise_value = ofNoise(glm::vec4(this->location_list[i] * 0.002, ofGetFrameNum() * 0.01));
+		auto max_z = 150;
+		auto z = max_z;
+		auto len = 100;
 
-		if (noise_value < 0.4) {
+		if (noise_value < 0.49 ) {
 
-			if (noise_value > 0.38) {
-
-				z = ofMap(noise_value, 0.38, 0.4, -max_z, 0);
-			}
-			else {
-
-				z = -max_z;
-			}
+			z = -max_z - len;
 		}
-		else if (noise_value > 0.6) {
+		else if (noise_value < 0.51) {
 
-			if (noise_value < 0.62) {
-
-				z = ofMap(noise_value, 0.6, 0.62, 0, max_z);
-			}
-			else {
-
-				z = max_z;
-			}
+			z = ofMap(noise_value, 0.49, 0.51, -max_z - len, max_z);
 		}
+
 
 		glm::vec3 location = this->location_list[i] + glm::vec3(0, 0, z);
 
-		this->setHexagonToMesh(this->face, this->frame, location, 15, 5);
+		this->setHexagonToMesh(this->face, this->frame, location, 30, len);
 
 	}
 
@@ -84,12 +72,13 @@ void ofApp::draw() {
 
 	this->cam.begin();
 	ofRotateX(90);
+	ofRotateY(ofGetFrameNum() * 0.72);
 
 	this->face.draw();
 	this->frame.draw();
 
 	this->cam.end();
-
+	
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
 	int start = 500;
