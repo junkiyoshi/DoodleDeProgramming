@@ -6,8 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
-	ofSetLineWidth(2);
+	ofBackground(39);
 	ofEnableDepthTest();
 
 	this->frame.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
@@ -19,7 +18,7 @@ void ofApp::update() {
 	ofSeedRandom(39);
 	glm::vec3 noise_param = glm::vec3(ofRandom(360), ofRandom(360), ofRandom(360));
 
-	this->radius_list.push_back(230);
+	this->radius_list.push_back(50);
 	this->rotation_list.push_back(glm::vec3(
 		ofMap(ofNoise(noise_param.x, ofGetFrameNum() * 0.01), 0, 1, -360, 360),
 		ofMap(ofNoise(noise_param.y, ofGetFrameNum() * 0.01), 0, 1, -360, 360),
@@ -27,7 +26,7 @@ void ofApp::update() {
 
 	for (int i = this->radius_list.size() - 1; i > -1; i--) {
 
-		this->radius_list[i] += 1;
+		this->radius_list[i] += 10;
 
 		if (this->radius_list[i] > 250) {
 
@@ -41,7 +40,7 @@ void ofApp::update() {
 
 	for (int i = 0; i < this->radius_list.size(); i++) {
 
-		this->setRingToMesh(this->face, this->frame, glm::vec3(), this->rotation_list[i], this->radius_list[i], this->radius_list[i] * 0.01, ofColor(255), ofColor(0));
+		this->setRingToMesh(this->face, this->frame, glm::vec3(), this->rotation_list[i], this->radius_list[i], this->radius_list[i] * 0.2, ofColor(0), ofColor(0, 0, 255));
 	}
 }
 
@@ -79,7 +78,7 @@ void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 l
 
 	int index = face_target.getNumVertices();
 
-	for (int deg = 0; deg < 360; deg += 5) {
+	for (int deg = 0; deg <= 210; deg += 5) {
 
 		vector<glm::vec3> vertices;
 		vertices.push_back(glm::vec3(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD), height * -0.5));
@@ -107,6 +106,16 @@ void ofApp::setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 l
 
 		frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 1);
 		frame_target.addIndex(frame_index + 2); frame_target.addIndex(frame_index + 3);
+
+		if (deg == 0) {
+
+			frame_target.addIndex(frame_index + 0); frame_target.addIndex(frame_index + 3);
+		}
+
+		if (deg == 210) {
+
+			frame_target.addIndex(frame_index + 1); frame_target.addIndex(frame_index + 2);
+		}
 
 		for (int i = 0; i < vertices.size(); i++) {
 
