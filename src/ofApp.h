@@ -20,11 +20,5 @@ public:
 	void dragEvent(ofDragInfo dragInfo) {};
 	void gotMessage(ofMessage msg) {};
 
-	void setRingToMesh(ofMesh& face_target, ofMesh& frame_target, glm::vec3 location, glm::vec3 rotation, float radius, float height, ofColor face_color, ofColor frame_color);
-
-	ofEasyCam cam;
-	ofMesh face, frame;
-
-	vector<float> radius_list;
-	vector<glm::vec3> rotation_list;
+	void draw_arrow(glm::vec2 location, glm::vec2 next_location, float size, ofColor fill_color, ofColor no_fill_color);
 };
