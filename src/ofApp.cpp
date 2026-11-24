@@ -6,8 +6,9 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openFrameworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofSetLineWidth(2);
+	ofEnableBlendMode(ofBlendMode::OF_BLENDMODE_ADD);
 }
 
 //--------------------------------------------------------------
@@ -21,21 +22,21 @@ void ofApp::draw() {
 
 	ofTranslate(ofGetWindowSize() * 0.5);
 
-	for (int k = 0; k < 720; k++) {
+	for (int k = 0; k < 360; k++) {
 
-		auto deg = ofGetFrameNum() * 1.44 + k;
-		auto next_deg = (ofGetFrameNum() + 1) * 1.44 + k;
+		auto deg = ofGetFrameNum() * 1.44 + k * 2;
+		auto next_deg = (ofGetFrameNum() + 1) * 1.44 + k * 2;
 		auto param = glm::vec3(2, 0, 0);
 		auto noise_seed = glm::vec3(ofRandom(1000), ofRandom(1000), ofRandom(1000));
 
-		auto radius = ofMap(ofNoise(k * 0.0005, ofGetFrameNum() * 0.003), 0, 1, 50, 350);
+		auto radius = ofMap(ofNoise(k * 0.0005, ofGetFrameNum() * 0.003), 0, 1, 150, 250);
 		auto base_location = glm::vec2(radius * cos(deg * DEG_TO_RAD), radius * sin(deg * DEG_TO_RAD));
 
 		auto location = glm::vec2(
 			ofMap(ofNoise(noise_seed.x, (k + ofGetFrameNum()) * 0.008), 0, 1, -40, 40),
 			ofMap(ofNoise(noise_seed.y, (k + ofGetFrameNum()) * 0.008), 0, 1, -40, 40));
 
-		auto next_radius = ofMap(ofNoise(k * 0.0005, (ofGetFrameNum() + 1) * 0.003), 0, 1, 50, 350);
+		auto next_radius = ofMap(ofNoise(k * 0.0005, (ofGetFrameNum() + 1) * 0.003), 0, 1, 150, 250);
 		auto next_base_location = glm::vec2(next_radius * cos(next_deg * DEG_TO_RAD), radius * sin(next_deg * DEG_TO_RAD));
 
 		auto next = glm::vec2(
@@ -45,7 +46,10 @@ void ofApp::draw() {
 		location += base_location;
 		next += next_base_location;
 
-		this->draw_arrow(location, next, ofMap(k, 0, 720, 5, 25), ofColor(39), ofColor(239));
+		ofColor color;
+		color.setHsb(ofRandom(255), 180, 255);
+
+		this->draw_arrow(location, next, ofMap(k, 0, 360, 5, 25), ofColor(color, 168), ofColor(color));
 	}
 
 	/*
