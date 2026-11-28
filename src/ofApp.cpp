@@ -6,7 +6,7 @@ void ofApp::setup() {
 	ofSetFrameRate(25);
 	ofSetWindowTitle("openframeworks");
 
-	ofBackground(239);
+	ofBackground(39);
 	ofEnableDepthTest();
 }
 
@@ -19,7 +19,7 @@ void ofApp::update() {
 void ofApp::draw() {
 
 	this->cam.begin();
-	ofRotateX(360 - 60);
+	ofRotateX(90);
 
 	float R = 200;
 	float r = 50;
@@ -28,15 +28,15 @@ void ofApp::draw() {
 	ofMesh face, line;
 	line.setMode(ofPrimitiveMode::OF_PRIMITIVE_LINES);
 
-	for (int r = 100; r > 0; r -= 10) {
+	for (int r = 100; r > 0; r -= 20) {
 
-		int v_start = ofMap(ofNoise(r * 0.0075 + ofGetFrameNum() * 0.01), 0, 1, -720, 720);
-		int v_end = v_start + 16;
+		int v_start = ofMap(ofNoise(r * 0.0075 + ofGetFrameNum() * 0.005), 0, 1, -1440, 1440);
+		int v_end = v_start + 15;
 		int v_span = 1;
 
 		for (int v = v_start; v <= v_end; v += v_span) {
 
-			for (int u = 0; u < 180; u += u_span) {
+			for (int u = 0; u < 360; u += u_span) {
 
 				face.addVertex(this->make_point(R, r, u - u_span * 0.5, v - v_span * 0.5));
 				face.addVertex(this->make_point(R, r, u + u_span * 0.5, v - v_span * 0.5));
@@ -57,14 +57,9 @@ void ofApp::draw() {
 				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 2); face.addIndex(face.getNumVertices() - 3);
 				face.addIndex(face.getNumVertices() - 1); face.addIndex(face.getNumVertices() - 3); face.addIndex(face.getNumVertices() - 4);
 
-				if (u == 0) {
+				if (u % 45 == 0) {
 
 					line.addIndex(line.getNumVertices() - 1); line.addIndex(line.getNumVertices() - 4);
-				}
-
-				if (u == 180) {
-
-					line.addIndex(line.getNumVertices() - 2); line.addIndex(line.getNumVertices() - 3);
 				}
 
 				if (v == v_start) {
@@ -87,7 +82,7 @@ void ofApp::draw() {
 
 	/*
 	// ffmpeg -i img_%04d.jpg aaa.mp4
-	int start = 250;
+	int start = 2;
 	if (ofGetFrameNum() > start) {
 
 		std::ostringstream os;
